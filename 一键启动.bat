@@ -39,7 +39,7 @@ echo [✓] ComfyUI 服务已就绪！
 :open_launcher
 REM ★ 打开可视化启动器
 echo [*] 打开操作界面...
-start "" "E:\AI\启动器.html"
+start "" "E:\AI\ComfyUI\venv\Scripts\pythonw.exe" "E:\AI\control_server.py"
 
 echo.
 echo ================================================================

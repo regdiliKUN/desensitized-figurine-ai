@@ -9,11 +9,11 @@
 ## 一、特性
 
 - **全本地部署**：ComfyUI（Pony / Flux 出图）+ Hunyuan3D（图生 3D）+ Ollama（文本大脑），离线运行
-- **一键启动器**：`手办AI.exe`（PyInstaller 打包，内嵌手办主题图标，双击即拉起服务并打开控制中心）
+- **一键启动器**：运行 `一键启动.bat`，启动 ComfyUI 和本地控制中心
 - **图生图 img2img**：参考图 + 提示词重绘，强度可调（`--strength`）
 - **手板制作增强**：自动扶正、加底座、抽壳、水密/尺寸/朝向诊断
 - **脱敏过审工作流**：肤色检测 → 区域分级遮挡 → 输出可过审版本；配套 `restore` 把去敏化模型还原成敏感样子
-- **控制中心**：`启动器.html` 汇总所有操作（出图 / 3D / 打印 / 脱敏 / 还原 / 打开文件夹 / 环境自检）
+- **控制中心**：通过本地服务操作出图、图生图、图生 3D、打印转换、打开文件夹和环境自检；脱敏和还原按钮尚未接入
 
 ---
 
@@ -35,14 +35,14 @@
 
 ```
 E:\AI\
-├── 手办AI.exe              ← ★ 一键启动器（EXE，双击即用）
+├── control_server.py       ← 本机控制服务（执行任务、文件选择、实时日志）
 ├── 启动器.html             ← 控制中心（浏览器界面）
 ├── 项目简报.html           ← 完整功能与设计记录
 ├── fig.py                  ← ★★ 统一入口（出图/图生3D/转换/脱敏/还原/自检）
 ├── convert_3d.py           ← GLB → OBJ/STL/3MF/PLY + 水密化 + 手板增强
 ├── launcher_exe.py         ← 一键启动器源码（PyInstaller 构建用）
 ├── 手办AI启动器.ico        ← PIL 程序化生成的手办主题图标
-├── 一键启动.bat            ← EXE 的 bat fallback 版本
+├── 一键启动.bat            ← 启动 ComfyUI 和控制中心
 ├── 启动ComfyUI.bat         ← 单独启动 ComfyUI 服务的 bat
 ├── .gitignore              ← 排除 ComfyUI/、模型、EXE、venv 等
 └── README.md               ← 本文件
@@ -125,24 +125,11 @@ python fig.py print "model.glb" --height 100 --base 0.03 --hollow 0.4
 
 ### 使用方式
 
-双击桌面上的「手办AI」图标即可。启动器会自动：
+双击 `E:\AI\一键启动.bat`。启动器会检测并启动 ComfyUI，然后启动仅监听本机的控制服务并打开浏览器。可以创建指向该批处理文件的桌面快捷方式。
 
-1. 检测 ComfyUI 是否已在运行
-2. 如未运行 → 后台启动 `ComfyUI/venv/python.exe main.py --port 8188`
-3. 轮询等待服务就绪（最多 120 秒）
-4. 打开浏览器显示控制中心 `启动器.html`
+请使用启动器打开控制中心，直接双击 `启动器.html` 无法运行本地任务或打开文件夹。控制中心的去敏感化、还原 3D 按钮尚未接入；`launcher_exe.py` 是旧版启动器源码，不能启动新的控制服务。
 
-### 从源码重新构建 EXE
-
-```bash
-python -m PyInstaller --noconfirm --onefile --windowed \
-  --name "手办AI" \
-  --icon "手办AI启动器.ico" \
-  --distpath "E:\AI" \
-  --workpath "E:\AI\_build_temp" \
-  --specpath "E:\AI\_build_temp" \
-  "launcher_exe.py"
-```
+出图和图生图目前使用英文提示词；完整一键生成支持中文描述，并依赖本地 Ollama、出图和 3D 模型。打印转换的默认成品目录为 `I:\AI\最终成品`，部署到其他路径时需调整脚本中的路径。
 
 ---
 

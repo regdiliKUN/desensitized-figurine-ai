@@ -240,7 +240,7 @@ textarea.input-box { min-height: 50px; resize: vertical; }
     <!-- 卡片1：全自动生成 -->
     <div class="feature-card">
       <h3>🚀 全自动生成手办</h3>
-      <p>输入中文描述，一键完成：出图 → 图生3D → 打印格式</p>
+      <p>一键生成支持中文；只出图和图生图请使用英文提示词</p>
       <textarea class="input-box" id="desc" placeholder="例如：银发红瞳双马尾少女，水手服，全身立绘">银发红瞳双马尾少女，水手服，全身立绘</textarea>
       <div class="chips">
         <span class="chip" onclick="fillDesc('银发红瞳双马尾少女，水手服，全身立绘')">银发双马尾</span>
@@ -260,13 +260,13 @@ textarea.input-box { min-height: 50px; resize: vertical; }
         <button class="btn btn-ghost btn-sm" onclick="runModel()">🧊 只图生3D</button>
         <button class="btn btn-ghost btn-sm" onclick="runPrint()">🖨️ 只转打印</button>
       </div>
-      <div class="progress"><div class="progress-fill" id="prog"></div></div>
+      <div id="job-status" style="margin-top:12px;color:#aaa">选择功能后将执行真实任务</div><div class="progress"><div class="progress-fill" id="prog"></div></div>
     </div>
 
     <!-- 卡片2：去敏感化 -->
     <div class="feature-card">
       <h3>🛡️ 去敏感化</h3>
-      <p>敏感图 → 去敏版（过 Meshy 审核）→ 生成 3D → 还原敏感样子</p>
+      <p>此功能尚未接入，请勿使用。</p>
       <input class="input-box" type="text" id="desen-input" placeholder="图片路径，如 C:\图片.png">
       <div class="param-row">
         <div><label>遮挡强度</label>
@@ -278,8 +278,8 @@ textarea.input-box { min-height: 50px; resize: vertical; }
         </div>
       </div>
       <div class="btn-row">
-        <button class="btn btn-pink" onclick="runDesensitize()">🛡️ 去敏感化</button>
-        <button class="btn btn-ghost btn-sm" onclick="runRestore()">🔄 还原3D</button>
+        <button class="btn btn-pink" disabled title="功能尚未接入">🛡️ 去敏感化</button>
+        <button class="btn btn-ghost btn-sm" disabled title="功能尚未接入">🔄 还原3D</button>
       </div>
     </div>
 
@@ -288,10 +288,10 @@ textarea.input-box { min-height: 50px; resize: vertical; }
       <h3>📁 文件 & 工具</h3>
       <p>打开输出目录、查看成品、打开命令行</p>
       <div class="btn-row">
-        <button class="btn btn-ghost btn-sm" onclick="openDir('E:\\AI\\ComfyUI\\output')">📂 出图/3D输出</button>
-        <button class="btn btn-ghost btn-sm" onclick="openDir('I:\\AI\\最终成品')">📂 打印成品</button>
-        <button class="btn btn-ghost btn-sm" onclick="openDir('E:\\AI')">📂 项目目录</button>
-        <button class="btn btn-ghost btn-sm" onclick="openCmd()">⌨️ 命令行</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDir('output')">📂 出图/3D输出</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDir('print')">📂 打印成品</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDir('project')">📂 项目目录</button>
+        <button class="btn btn-ghost btn-sm" disabled title="请从项目目录打开命令行">⌨️ 命令行</button>
       </div>
     </div>
 
@@ -360,198 +360,72 @@ function fillDesc(t) { document.getElementById('desc').value = t; }
 function setProg(p) { PROG.style.width = p + '%'; }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ★ 服务状态检测
+// 操作必须从本机控制服务打开；直接双击 HTML 无法执行本地程序。
+const API = location.pathname.replace(/\/$/, '');
+const hasBackend = location.protocol === 'http:' && /^\/[A-Za-z0-9_-]+$/.test(API);
+let previousOutput = '';
+async function callApi(path, data) {
+  if (!hasBackend) throw new Error('请双击桌面「手办AI」图标或 E:\\AI\\一键启动.bat 打开控制中心');
+  const r = await fetch(API + path, data === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  const result = await r.json();
+  if (!r.ok) throw new Error(result.error || `请求失败 ${r.status}`);
+  return result;
+}
+function safeLog(text) {
+  const d = document.createElement('div'); d.textContent = text; TERM.appendChild(d); TERM.scrollTop = TERM.scrollHeight;
+}
 async function checkService() {
-  const banner = document.getElementById('banner');
-  const icon = document.getElementById('banner-icon');
-  const title = document.getElementById('banner-title');
-  const desc = document.getElementById('banner-desc');
-  const btn = document.getElementById('banner-btn');
-
-  banner.className = 'service-banner loading';
-  icon.textContent = '⏳';
-  title.textContent = '正在检测 ComfyUI 服务...';
-  desc.textContent = '请稍候';
-  btn.style.display = 'none';
-
   try {
-    const r = await fetch('http://127.0.0.1:8188/system_stats');
-    if (r.ok) {
-      const d = await r.json();
-      banner.className = 'service-banner running';
-      icon.textContent = '✅';
-      title.textContent = 'ComfyUI 运行中';
-      desc.textContent = `v${d.system.comfyui_version} · GPU: ${d.devices[0].name}`;
-      btn.style.display = 'none';
-      btn.className = 'service-btn running';
-      btn.textContent = '已就绪';
-
-      document.getElementById('dot-comfy').className = 'dot ok';
-      document.getElementById('st-comfy').textContent = `v${d.system.comfyui_version}`;
-      log('<span class="ok">[✓]</span> ComfyUI 运行中');
-      return true;
+    const state = await callApi('/api/status');
+    const ready = !!state.comfy;
+    document.getElementById('banner').className = 'service-banner ' + (ready ? 'running' : 'stopped');
+    document.getElementById('banner-icon').textContent = ready ? '✅' : '❌';
+    document.getElementById('banner-title').textContent = ready ? 'ComfyUI 运行中' : 'ComfyUI 未启动';
+    document.getElementById('banner-desc').textContent = ready ? `v${state.comfy.system.comfyui_version} · ${state.comfy.devices?.[0]?.name || ''}` : '请关闭页面后双击桌面「手办AI」重新启动';
+    const btn=document.getElementById('banner-btn'); btn.style.display=ready ? 'block':'none'; btn.textContent='打开 ComfyUI'; btn.onclick=()=>window.open('http://127.0.0.1:8188/','_blank');
+    document.getElementById('dot-comfy').className='dot '+(ready?'ok':'err');
+    document.getElementById('st-comfy').textContent=ready?'运行中':'未启动';
+    document.getElementById('dot-ollama').className='dot '+(state.ollama?'ok':'err');
+    document.getElementById('st-ollama').textContent=state.ollama?'运行中':'未启动';
+    if (state.output !== undefined && state.output !== previousOutput) {
+      TERM.textContent = state.output; TERM.scrollTop=TERM.scrollHeight; previousOutput=state.output;
     }
+    if (state.mode && !state.running && state.exit_code !== null) {
+      document.getElementById('job-status').textContent = state.exit_code === 0 ? '任务完成（请检查输出文件）' : `任务失败（退出码 ${state.exit_code}），请查看下方日志`;
+      setProg(state.exit_code === 0 ? 100 : 0);
+    } else if(state.running) { document.getElementById('job-status').textContent='任务运行中，详细进度见下方日志'; }
+    return ready;
   } catch(e) {
-    banner.className = 'service-banner stopped';
-    icon.textContent = '❌';
-    title.textContent = 'ComfyUI 未启动';
-    desc.textContent = '点击右侧按钮一键启动服务';
-    btn.style.display = 'block';
-    btn.className = 'service-btn start';
-    btn.textContent = '一键启动';
-
-    document.getElementById('dot-comfy').className = 'dot err';
-    document.getElementById('st-comfy').textContent = '未启动';
-    log('<span class="err">[!]</span> ComfyUI 未启动，点击「一键启动」');
+    document.getElementById('banner').className='service-banner stopped';
+    document.getElementById('banner-icon').textContent='❌';
+    document.getElementById('banner-title').textContent='请通过启动器打开';
+    document.getElementById('banner-desc').textContent=e.message;
     return false;
   }
 }
-
-// ★ Ollama 检测
-async function checkOllama() {
+async function checkOllama() {}
+async function startComfyUI() { safeLog('请双击桌面「手办AI」图标启动。'); }
+async function checkEnv() { await checkService(); }
+async function runTask(mode) {
   try {
-    const r = await fetch('http://127.0.0.1:11434/api/tags');
-    if (r.ok) {
-      document.getElementById('dot-ollama').className = 'dot ok';
-      document.getElementById('st-ollama').textContent = '运行中';
+    let path='';
+    if (['i2i','model','print'].includes(mode)) {
+      const choice=await callApi('/api/pick',{kind:mode==='print'?'model':'image'});
+      path=choice.path; if (!path) return;
     }
-  } catch(e) {
-    document.getElementById('dot-ollama').className = 'dot err';
-    document.getElementById('st-ollama').textContent = '未启动';
-  }
+    const data={mode, path, prompt:document.getElementById('desc').value.trim(), height:document.getElementById('height').value, base:document.getElementById('base').value, hollow:document.getElementById('hollow').value};
+    await callApi('/api/run',data);
+    previousOutput=''; clearTerm(); setProg(5); document.getElementById('job-status').textContent='任务已启动，详细进度见下方日志';
+    await checkService();
+  } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
 }
-
-// ★ 一键启动（提示用户双击桌面图标）
-function startComfyUI() {
-  log('<span class="info">[启动]</span> 请双击桌面的「手办AI」图标');
-  log('<span class="info">[启动]</span> 它会自动启动 ComfyUI 服务并打开本界面');
-  log('<span class="info">[或]</span> 在命令行运行: E:\\AI\\ComfyUI\\venv\\Scripts\\python.exe E:\\AI\\fig.py serve');
-  // 尝试用 file:// 协议打开 bat（浏览器可能阻止）
-  log('<span class="info">[提示]</span> 浏览器无法直接启动本地程序，请双击桌面图标');
-}
-
-// 环境检测
-async function checkEnv() {
-  log('<span class="info">[检测]</span> 开始环境自检...');
-  setProg(10);
-  await checkService();
-  setProg(50);
-  await checkOllama();
-  setProg(100);
-  log('<span class="info">[完成]</span> 检测完毕');
-}
-
-// 自动运行
-async function runAuto() {
-  const desc = document.getElementById('desc').value.trim();
-  if (!desc) { log('<span class="err">[!] 请输入角色描述</span>'); return; }
-  const h = document.getElementById('height').value || 150;
-  const b = document.getElementById('base').value || 0;
-  const ho = document.getElementById('hollow').value || 0;
-  let extra = `--model-height ${h}`;
-  if (b > 0) extra += ` --base ${(b/100).toFixed(2)}`; else extra += ' --no-base';
-  if (ho > 0) extra += ` --hollow ${(ho/100).toFixed(2)}`;
-
-  clearTerm();
-  log(`<span class="cmd">> fig.py auto "${desc}" ${extra}</span>`);
-  setProg(5);
-  log('<span class="info">[1/4]</span> 大脑翻译中文→英文...');
-  setProg(15); await sleep(800);
-  log('<span class="info">[2/4]</span> Pony Diffusion 出图...');
-  setProg(35); await sleep(1000);
-  log('<span class="info">[3/4]</span> 背景分离 + 色调平坦化 + 图生3D...');
-  setProg(55); await sleep(800);
-  log('<span class="info">[4/4]</span> 打印格式转换（扶正/底座/诊断）...');
-  setProg(85); await sleep(800);
-  log('<span class="ok">[✓ 完成]</span>');
-  log('  📁 出图: <span class="cmd">E:\\AI\\ComfyUI\\output\\</span>');
-  log('  📁 3D:  <span class="cmd">E:\\AI\\ComfyUI\\output\\*.glb</span>');
-  log('  📁 打印: <span class="cmd">I:\\AI\\最终成品\\</span>');
-  setProg(100);
-}
-
-async function runImg() {
-  const desc = document.getElementById('desc').value.trim();
-  if (!desc) { log('<span class="err">[!] 请输入描述</span>'); return; }
-  clearTerm();
-  log(`<span class="cmd">> fig.py img "${desc}" --model pony</span>`);
-  log('<span class="info">[出图]</span> Pony Diffusion...');
-  setProg(50); await sleep(1000);
-  log('<span class="ok">[✓]</span> 出图完成 → E:\\AI\\ComfyUI\\output\\');
-  setProg(100);
-}
-
-async function runI2I() {
-  const desc = document.getElementById('desc').value.trim();
-  if (!desc) { log('<span class="err">[!] 请先在描述框输入英文提示词</span>'); return; }
-  clearTerm();
-  log('<span class="info">[图生图]</span> 请在命令行运行：');
-  log('<span class="cmd">> fig.py i2i "参考图.png" "' + desc + '" --strength 0.7</span>');
-  log('<span class="info">[说明]</span> --strength 控制重绘强度：');
-  log('  1.0=完全重画 / 0.7=大幅修改保留构图(推荐) / 0.5=适度修改 / 0.3=轻微调整');
-  log('<span class="info">[示例]</span> fig.py i2i "图.png" "1girl, red eyes, swimsuit" --strength 0.5 --model pony');
-  setProg(100);
-}
-
-async function runModel() {
-  clearTerm();
-  log('<span class="cmd">> fig.py model 图.png --remesh-res 512 --smooth-iters 3</span>');
-  log('<span class="info">[3D]</span> Hunyuan3D 重建中...');
-  setProg(50); await sleep(1500);
-  log('<span class="ok">[✓]</span> 3D 完成 → *.glb');
-  setProg(100);
-}
-
-async function runPrint() {
-  clearTerm();
-  const h = document.getElementById('height').value || 150;
-  const b = document.getElementById('base').value || 0;
-  const ho = document.getElementById('hollow').value || 0;
-  let extra = `--model-height ${h}`;
-  if (b > 0) extra += ` --base ${(b/100).toFixed(2)}`; else extra += ' --no-base';
-  if (ho > 0) extra += ` --hollow ${(ho/100).toFixed(2)}`;
-  log(`<span class="cmd">> fig.py print 模型.glb ${extra}</span>`);
-  log('<span class="info">[转换]</span> 扶正 + 底座 + 诊断 + 导出...');
-  setProg(50); await sleep(1000);
-  log('<span class="ok">[✓]</span> 打印文件完成 → I:\\AI\\最终成品\\');
-  setProg(100);
-}
-
-async function runDesensitize() {
-  const input = document.getElementById('desen-input').value.trim();
-  const strength = document.getElementById('desen-strength').value;
-  if (!input) { log('<span class="err">[!] 请输入图片路径</span>'); return; }
-  clearTerm();
-  log(`<span class="cmd">> fig.py desensitize "${input}" --strength ${strength}</span>`);
-  log('<span class="info">[去敏]</span> 肤色检测 + 区域分级 + 遮挡...');
-  setProg(50); await sleep(800);
-  log('<span class="ok">[✓]</span> 去敏化完成');
-  log('<span class="info">[下一步]</span> 把去敏图上传 Meshy → 生成 3D → 用 restore 还原');
-  setProg(100);
-}
-
-async function runRestore() {
-  clearTerm();
-  log('<span class="cmd">> fig.py restore "模型.glb" --original "原图.png"</span>');
-  log('<span class="info">[还原]</span> 用原图作为纹理参考...');
-  setProg(100);
-}
-
-function runDoctor() {
-  clearTerm();
-  log('<span class="cmd">> fig.py doctor</span>');
-  log('<span class="info">[自检]</span> 请在命令行运行此命令查看完整输出');
-}
-
-function openDir(path) {
-  log(`<span class="info">[打开]</span> ${path}`);
-  // 尝试用 file:// 协议（浏览器可能阻止）
-  window.open('file:///' + path.replace(/\\/g, '/'), '_blank');
-}
-
-function openCmd() {
-  log('<span class="info">[命令行]</span> 请双击桌面「手办AI」图标，或在文件夹地址栏输入 cmd');
-}
+function runAuto(){return runTask('auto')}
+function runImg(){return runTask('img')}
+function runI2I(){return runTask('i2i')}
+function runModel(){return runTask('model')}
+function runPrint(){return runTask('print')}
+function runDoctor(){return runTask('doctor')}
+async function openDir(folder){try {await callApi('/api/open',{folder});} catch(e) {safeLog('[错误] '+e.message);}}
 
 function toggleHelp() {
   const el = document.getElementById('help-section');
@@ -569,7 +443,7 @@ checkService();
 checkOllama();
 
 // 每 30 秒自动检测一次服务状态
-setInterval(() => { checkService(); checkOllama(); }, 30000);
+setInterval(() => { checkService(); }, 2000);
 </script>
 </body>
 </html>

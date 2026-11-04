@@ -83,6 +83,7 @@ except ImportError:
 
 # cmd_img 选中的最佳出图路径（供 cmd_all 取用）
 _LAST_PICKED = None
+_LAST_GLB = None
 
 DEFAULT_NEG = (
     "low quality, worst quality, blurry, deformed, extra limbs, bad hands, "
@@ -389,10 +390,9 @@ def release_ollama_vram(verbose=True):
 def wait_vram_free(need_mb=6000, timeout=180, quiet=False):
     """等待显存释放到 need_mb 以上。
 
-    先等 Ollama 自行卸载；超时则强杀残留的 llama-server.exe 再等。
+    等待其他程序自行释放显存，不强制结束进程。
     """
     t0 = time.time()
-    killed = False
     while time.time() - t0 < timeout:
         used, total = gpu_mem()
         if used is None:
@@ -401,9 +401,6 @@ def wait_vram_free(need_mb=6000, timeout=180, quiet=False):
             if not quiet:
                 print(f"    显存已就绪: 已用 {used}MB / 共 {total}MB")
             return True
-        if not killed and time.time() - t0 > 12:
-            release_ollama_vram(verbose=not quiet)
-            killed = True
         if not quiet:
             print(f"    等待显存释放: 已用 {used}MB / 共 {total}MB", flush=True)
         time.sleep(3)
@@ -442,7 +439,11 @@ def wait_done(pid, timeout=1800, label=""):
         time.sleep(3)
         hist = api_get(f"/history/{pid}")
         if pid in hist:
-            return hist[pid]
+            entry = hist[pid]
+            status = entry.get("status", {})
+            if status.get("status_str") == "error":
+                raise RuntimeError(f"ComfyUI 工作流失败: {status.get('messages', [])}")
+            return entry
         if label:
             el = int(time.time() - t0)
             if el % 30 == 0:
@@ -1364,6 +1365,8 @@ def isolate_background(src, dst, alpha_thresh=32, margin=0.08, long_side=1024,
 
 
 def cmd_model(a):
+    global _LAST_GLB
+    _LAST_GLB = None
     img = a.image
     if not os.path.exists(img):
         print(f"[!] 图片不存在: {img}")
@@ -1412,6 +1415,7 @@ def cmd_model(a):
         print(f"[✓] {fn}  ({typ}, {sz:.2f} MB)\n    {p}")
         if fn.lower().endswith(".glb") and glb is None:
             glb = p
+    _LAST_GLB = glb
     return 0
 
 
@@ -1486,12 +1490,11 @@ def cmd_all(a):
     rc = cmd_model(a)
     if rc != 0:
         return rc
-    # 找最新 glb
-    glbs = sorted([f for f in os.listdir(OUT) if f.lower().endswith(".glb")],
-                  key=lambda f: os.path.getmtime(os.path.join(OUT, f)), reverse=True)
-    if not glbs:
-        return 0
-    glb = os.path.join(OUT, glbs[0])
+    # 只能使用本次任务生成的模型，避免误用旧文件。
+    glb = _LAST_GLB
+    if not glb or not os.path.isfile(glb):
+        print("[!] 本次图生3D没有生成 GLB，停止打印转换")
+        return 1
     print(f"[*] 阶段3/3 转打印格式 <- {os.path.basename(glb)}")
     a.model = glb
     return cmd_print(a)
