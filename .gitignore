@@ -1,0 +1,25 @@
+# ── 大模型与运行环境（不入库，约 31GB 模型权重 + venv）──
+ComfyUI/
+
+# ── 打包产物（33MB 二进制，源码见 launcher_exe.py）──
+手办AI.exe
+
+# ── 日志 ──
+*.log
+_comfyui_*.log
+
+# ── Python 缓存与虚拟环境 ──
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ── 临时构建目录 ──
+_build_temp/
+
+# ── AI 生成的图标素材（主图标已保留为 手办AI启动器.ico）──
+icons/
+
+# ── 系统文件 ──
+Thumbs.db
+.DS_Store

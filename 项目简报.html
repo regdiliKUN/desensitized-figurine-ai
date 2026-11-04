@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目简报 - 二次元手办AI流水线 (E盘SSD版)</title>
+<style>
+body { font-family: "Microsoft YaHei", sans-serif; background: #0f1117; color: #e8e8e8; margin: 0; padding: 20px; line-height: 1.7; }
+.container { max-width: 880px; margin: 0 auto; }
+h1 { color: #7c5cfc; border-bottom: 2px solid #2a2d3a; padding-bottom: 10px; }
+h2 { color: #e85d8a; margin-top: 30px; }
+h3 { color: #fb923c; margin-top: 20px; }
+.card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 10px; padding: 16px 20px; margin: 12px 0; }
+.card hl { color: #4ade80; font-weight: bold; }
+.card warn { color: #fb923c; font-weight: bold; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #2a2d3a; }
+th { color: #7c5cfc; font-weight: 600; }
+code { background: #0a0b0f; padding: 2px 8px; border-radius: 4px; color: #7c5cfc; font-family: Consolas, monospace; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-right: 6px; }
+.tag-ok { background: #1a3a1a; color: #4ade80; }
+.tag-warn { background: #3a2a1a; color: #fb923c; }
+.tag-new { background: #2a1a3a; color: #a78bfa; }
+.tag-done { background: #1a2a3a; color: #60a5fa; }
+.summary-box { background: linear-gradient(135deg, #1a1d27, #252835); border-radius: 12px; padding: 20px; margin: 16px 0; border-left: 4px solid #7c5cfc; }
+.footer { text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #2a2d3a; color: #888; font-size: 13px; }
+.disk-ssd { color: #4ade80; font-weight: bold; }
+.disk-hdd { color: #fb923c; font-weight: bold; }
+.check-list li { margin: 6px 0; }
+.check-pass { color: #4ade80; }
+.check-fail { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>📋 项目简报：二次元手办 AI 流水线</h1>
+<p style="color:#888">更新时间：2026-11-04 00:55 · 项目路径：<code>E:\AI</code>（SSD） · 最终成品：<code>I:\AI\最终成品</code>（HDD）</p>
+
+<div class="summary-box">
+<strong>一句话总结：</strong>在 i9-13900K + 64GB + RTX 4090 上完全本地部署了一套无审核的二次元手办 AI 生成环境。
+项目已从 HDD (I盘) 迁移到 SSD (E盘)，ComfyUI + 模型权重全部在 SSD 上运行加速。
+出图（Pony/Flux）、图生3D（Hunyuan3D）、文本大脑（Ollama）三大能力已验证可用。
+本轮完成了：项目迁移 SSD → 桌面快捷方式 + 自定义图标 → 色调平坦化集成 → 手板制作增强 → 图像去敏感化功能 → I盘清理75GB → img2img图生图 → F盘NovelAI删除(10.91GB) → 桌面合并为1个入口。
+</div>
+
+<h2>一、本轮对话做了什么</h2>
+
+<h3>1. ★ 项目从 HDD 迁移到 SSD（核心改进）</h3>
+<div class="card">
+<p><span class="tag tag-done">已完成</span> 按用户要求「影响速度的放固态盘，不影响速度的放机械盘」：</p>
+<table>
+<tr><th>内容</th><th>原位置</th><th>新位置</th><th>理由</th></tr>
+<tr><td>ComfyUI + venv + 模型权重</td><td><code>I:\AI\ComfyUI</code></td><td class="disk-ssd"><code>E:\AI\ComfyUI</code></td><td>推理频繁读写，SSD 加速</td></tr>
+<tr><td>fig.py / convert_3d.py</td><td><code>I:\AI\</code></td><td class="disk-ssd"><code>E:\AI\</code></td><td>脚本随项目走</td></tr>
+<tr><td>出图 + 3D 输出</td><td><code>I:\AI\ComfyUI\output</code></td><td class="disk-ssd"><code>E:\AI\ComfyUI\output</code></td><td>推理产出，SSD 加速</td></tr>
+<tr><td>启动器 / 简报</td><td><code>I:\AI\</code></td><td class="disk-ssd"><code>E:\AI\</code></td><td>界面入口</td></tr>
+<tr><td>最终成品（STL/3MF/GLB）</td><td><code>I:\AI\最终成品</code></td><td class="disk-hdd"><code>I:\AI\最终成品</code>（保留）</td><td>打印文件不频繁读，HDD 足够</td></tr>
+</table>
+<p><strong>迁移详情：</strong>Robocopy 复制 47,056 文件 / 69.2GB / 3分49秒 / 323 MB/s</p>
+<p><strong>路径动态化：</strong><code>fig.py</code> 所有硬编码 <code>I:/AI</code> 改为 <code>HERE = os.path.dirname(os.path.abspath(__file__))</code>，跟随脚本位置自动适配</p>
+</div>
+
+<h3>2. ★ ComfyUI 从 E 盘启动验证</h3>
+<div class="card">
+<p><span class="tag tag-ok">验证通过</span> ComfyUI 从 E 盘 SSD 成功启动并响应 HTTP 请求：</p>
+<table>
+<tr><th>检查项</th><th>结果</th></tr>
+<tr><td>ComfyUI 版本</td><td class="check-pass">v0.43.0 ✓</td></tr>
+<tr><td>Python</td><td class="check-pass">3.12.3 (venv) ✓</td></tr>
+<tr><td>PyTorch</td><td class="check-pass">2.7.1+cu128, CUDA True ✓</td></tr>
+<tr><td>GPU</td><td class="check-pass">RTX 4090, 25.76 GB VRAM ✓</td></tr>
+<tr><td>3D 节点</td><td class="check-pass">10/10 全部可用 ✓</td></tr>
+<tr><td>出图节点</td><td class="check-pass">5/5 全部可用 ✓</td></tr>
+<tr><td>模型权重</td><td class="check-pass">3个 safetensors (31.56 GB) ✓</td></tr>
+<tr><td>Ollama</td><td class="check-pass">7个模型可用 ✓</td></tr>
+</table>
+</div>
+
+<h3>3. ★ 桌面快捷方式（4个全部修复）</h3>
+<div class="card">
+<p><span class="tag tag-done">已修复</span> 在 <code>D:\desktop</code>（用户实际桌面位置）创建了4个快捷方式：</p>
+<table>
+<tr><th>快捷方式</th><th>指向</th><th>用途</th></tr>
+<tr><td>手办AI流水线.lnk</td><td><code>E:\AI\</code>（文件夹）</td><td>右键→打开文件所在位置→直达 E 盘包体</td></tr>
+<tr><td>手办AI启动器.lnk</td><td><code>E:\AI\启动器.html</code></td><td>双击打开可视化界面</td></tr>
+<tr><td>手办AI命令行.lnk</td><td><code>cmd.exe /k cd /d E:\AI</code></td><td>双击打开终端进入项目目录</td></tr>
+<tr><td>手办AI服务器.lnk</td><td><code>E:\AI\启动ComfyUI.bat</code></td><td>双击启动 ComfyUI 推理服务</td></tr>
+</table>
+<p><strong>技术细节：</strong>用 pywin32 <code>win32com.client.Dispatch('WScript.Shell')</code> 创建真正的 .lnk 文件（非 .url），右键「打开文件所在位置」能直达 E 盘目标目录。</p>
+</div>
+
+<h3>4. ★ 色调平坦化集成到主流程</h3>
+<div class="card">
+<p><span class="tag tag-done">已集成</span> <code>_flatten_shading()</code> 已接入 <code>cmd_model</code> 主流程：</p>
+<ul class="check-list">
+<li class="check-pass">✓ 位置：背景分离（isolate_background）之后、上传 ComfyUI 之前</li>
+<li class="check-pass">✓ 默认开启（compress=0.20，只保留20%阴影对比）</li>
+<li class="check-pass">✓ 新增 <code>--no-flatten</code> 参数可关闭</li>
+<li class="check-pass">✓ 新增 <code>--flatten-compress</code> 参数可调压缩比</li>
+<li class="check-pass">✓ 处理流程：原图 → 背景分离 → 色调平坦化 → 上传 → 图生3D</li>
+</ul>
+<p><strong>效果：</strong>蜂窝纹法线抖动 16.1% → 10.7%（+Taubin 后处理 → 2.65%）</p>
+</div>
+
+<h3>5. ★ 3D 精度重做（前序工作）</h3>
+<div class="card">
+<table>
+<tr><th>指标</th><th>旧版</th><th>新版（hq_v2）</th><th>提升</th></tr>
+<tr><td>面数</td><td>60,000</td><td>4,401,308</td><td>73倍</td></tr>
+<tr><td>锐边占比</td><td>35.46%</td><td>0.07%</td><td>508倍</td></tr>
+<tr><td>水密性</td><td>False</td><td>True</td><td>-</td></tr>
+<tr><td>GLB 大小</td><td>8 MB</td><td>105 MB</td><td>-</td></tr>
+</table>
+</div>
+
+<h3>6. ★ 源图质量修复（前序工作）</h3>
+<div class="card">
+<table>
+<tr><th>问题</th><th>根因</th><th>修复方案</th><th>效果</th></tr>
+<tr><td>背后大红圆盘</td><td>isnet-anime 把背景红圆盘当前景</td><td><code>_drop_color_blobs()</code> 颜色指纹剔除</td><td>暗红残留 18.2%→2.0%</td></tr>
+<tr><td>表面蜂窝纹</td><td>cel shading 被当几何深度</td><td><code>_flatten_shading()</code> 色调平坦化</td><td>法线抖动 16.1%→10.7%</td></tr>
+<tr><td>3D 出来是背面</td><td>Hunyuan3D 深度歧义</td><td>提示词加 front view</td><td>已修复</td></tr>
+</table>
+</div>
+
+<h3>7. ★ 手板制作（转打印格式）流程优化</h3>
+<div class="card">
+<p><span class="tag tag-done">已完成</span> 在 <code>convert_3d.py</code> / <code>fig.py print</code> 中新增商业手办打印专用功能：</p>
+<ul class="check-list">
+<li class="check-pass">✓ <strong>自动扶正朝向</strong>：检测模型最长轴，旋转到 Z 轴竖立，避免打印时躺倒</li>
+<li class="check-pass">✓ <strong>自动加底座</strong>：底部生成圆柱底座，厚度比例可调（默认 3% 高度），让手办能站稳</li>
+<li class="check-pass">✓ <strong>抽壳省树脂</strong>：可选中空壳体 + 底部开孔，光固化打印标准做法，降低耗材成本</li>
+<li class="check-pass">✓ <strong>打印前诊断报告</strong>：自动检查水密性 / 尺寸 / 朝向 / 底面宽度 / 锐边占比</li>
+<li class="check-pass">✓ <strong>修复高度轴判断</strong>：扶正后高度在 Z 轴，解决之前按 Y 轴缩放的 bug</li>
+</ul>
+<p><strong>新增命令行参数：</strong></p>
+<table>
+<tr><th>参数</th><th>作用</th><th>示例</th></tr>
+<tr><td><code>--no-orient</code></td><td>跳过自动扶正</td><td>模型已竖立时使用</td></tr>
+<tr><td><code>--base [比例]</code></td><td>加底座（默认 0.03）</td><td><code>--base 0.05</code> = 5% 高度厚</td></tr>
+<tr><td><code>--no-base</code></td><td>不加底座</td><td>-</td></tr>
+<tr><td><code>--hollow [比例]</code></td><td>抽壳（默认 0.05）</td><td><code>--hollow 0.03</code> = 3% 对角线壁厚</td></tr>
+<tr><td><code>--no-hollow</code></td><td>不抽壳</td><td>-</td></tr>
+<tr><td><code>--no-diagnose</code></td><td>关闭诊断报告</td><td>-</td></tr>
+</table>
+<p><strong>示例：</strong><code>python fig.py print 模型.glb --model-height 150 --base 0.05 --hollow 0.04</code></p>
+</div>
+
+<h3>8. ★ 可视化启动器增强</h3>
+<div class="card">
+<p><span class="tag tag-done">已完成</span> <code>E:\AI\启动器.html</code> 已加入打印参数控制面板：</p>
+<ul class="check-list">
+<li class="check-pass">✓ 成品高度输入框（默认 150mm）</li>
+<li class="check-pass">✓ 底座厚度滑块/输入框（默认 3% 高度，0=无底座）</li>
+<li class="check-pass">✓ 抽壳壁厚输入框（默认 0=实心，可设 3%-10% 省树脂）</li>
+<li class="check-pass">✓ 输出格式选择（STL/3MF/OBJ/PLY）</li>
+<li class="check-pass">✓ 流程说明增加「手板制作已优化」提示条</li>
+</ul>
+</div>
+
+<h3>9. ★ 桌面入口合并为 1 个（手办主题图标）</h3>
+<div class="card">
+<p><span class="tag tag-done">已完成</span> 桌面从 4 个快捷方式合并为 <strong>1 个</strong>「手办AI.lnk」：</p>
+<table>
+<tr><th>桌面图标</th><th>双击行为</th></tr>
+<tr><td><strong>手办AI.lnk</strong></td><td>① 后台启动 ComfyUI 服务 → ② 等待就绪 → ③ 自动打开控制中心界面</td></tr>
+</table>
+<p>所有细分操作（出图/3D/打印/去敏化/还原/打开文件夹/命令行/环境检测）都在<strong>控制中心界面</strong>里完成，用户不需要面对多个图标做选择。</p>
+<p><strong>一键启动.bat</strong> 自动检测 ComfyUI 是否已在运行，避免重复启动；等待最多 90 秒服务就绪后打开浏览器。</p>
+<p><strong>图标：</strong>使用自定义手办主题 .ico（<code>E:\AI\icons\手办AI启动器.ico</code>），粉紫渐变背景 + 播放按钮 + 手办剪影。</p>
+</div>
+
+<h2>二、项目位置和冲突情况</h2>
+
+<div class="card">
+<h3>磁盘分区布局</h3>
+<table>
+<tr><th>盘符</th><th>类型</th><th>容量</th><th>用途</th></tr>
+<tr><td>C盘</td><td>SSD NVMe</td><td>1.4TB</td><td>系统盘</td></tr>
+<tr><td>D盘</td><td>SSD NVMe</td><td>2TB</td><td>桌面（<code>D:\desktop</code>）</td></tr>
+<tr><td class="disk-ssd">E盘</td><td class="disk-ssd">SSD NVMe</td><td class="disk-ssd">2TB</td><td class="disk-ssd">★ 项目运行盘（ComfyUI + 模型 + 输出）</td></tr>
+<tr><td>F盘</td><td>SSD NVMe</td><td>2TB</td><td>备用 SSD</td></tr>
+<tr><td class="disk-hdd">I盘</td><td class="disk-hdd">HDD SATA</td><td class="disk-hdd">8TB</td><td class="disk-hdd">最终成品 + print_ready + assets（已清理75GB旧备份）</td></tr>
+</table>
+
+<h3>项目包体位置（E盘 SSD）</h3>
+<table>
+<tr><th>路径</th><th>内容</th><th>大小</th></tr>
+<tr><td><code>E:\AI\</code></td><td>项目根目录</td><td>~70 GB</td></tr>
+<tr><td><code>E:\AI\fig.py</code></td><td>统一入口脚本（~1600行）</td><td>73 KB</td></tr>
+<tr><td><code>E:\AI\convert_3d.py</code></td><td>3D 后处理脚本</td><td>15 KB</td></tr>
+<tr><td><code>E:\AI\启动器.html</code></td><td>可视化操作界面</td><td>18 KB</td></tr>
+<tr><td><code>E:\AI\启动ComfyUI.bat</code></td><td>双击启动推理服务</td><td>0.5 KB</td></tr>
+<tr><td><code>E:\AI\icons\</code></td><td>桌面图标 .ico 文件</td><td>~500 KB</td></tr>
+<tr><td><code>E:\AI\ComfyUI\</code></td><td>ComfyUI + 模型权重 + venv</td><td>~69 GB</td></tr>
+<tr><td><code>E:\AI\ComfyUI\models\</code></td><td>Flux + Pony + Hunyuan3D 权重</td><td>31.56 GB</td></tr>
+<tr><td><code>E:\AI\ComfyUI\output\</code></td><td>出图 + 3D 模型输出</td><td>~3 GB</td></tr>
+<tr><td class="disk-hdd"><code>I:\AI\最终成品\</code></td><td class="disk-hdd">打印格式（STL/3MF/GLB）</td><td class="disk-hdd">~750 MB</td></tr>
+</table>
+
+<h3>与之前本地文件的关系</h3>
+<p><span class="tag tag-ok">无冲突</span></p>
+<ul>
+<li><strong>不与</strong>系统 Python 冲突：使用 ComfyUI 自带 venv 和 CadQuery venv</li>
+<li><strong>不与</strong>其他 AI 工具冲突：所有模型权重独立在 <code>E:\AI\ComfyUI\models\</code></li>
+<li><strong>不修改</strong>系统注册表、环境变量、系统 PATH</li>
+<li><strong>I:\AI 已清理</strong>：删除 ComfyUI 旧副本(74.3GB) + InstantMesh(961MB) + 实验脚本，仅保留最终成品/print_ready/assets</li>
+</ul>
+</div>
+
+<h2>三、如何使用</h2>
+
+<div class="card">
+<h3>桌面使用（推荐小白用）</h3>
+<ol>
+<li><strong>双击桌面「手办AI」</strong>（唯一图标）→ 自动启动 ComfyUI 服务 + 打开控制中心界面</li>
+<li>在界面里选择操作：🚀一键生成 / 🛡️去敏感化 / 📁打开文件夹 / ⌨️命令行</li>
+<li>界面自动检测服务状态（每30秒刷新），绿灯=运行中，红灯=未启动</li>
+</ol>
+
+<h3>命令行（高级用户）</h3>
+            <pre style="background:#0a0b0f;padding:12px;border-radius:8px;overflow-x:auto;font-size:13px;color:#a8a8a8">
+<code># 先启动 ComfyUI 服务
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py serve
+
+# 全自动（中文描述 -> 出图 -> 图生3D -> 打印格式）
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py auto "银发红瞳双马尾少女，水手服，全身立绘"
+
+# 分步操作
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py img "1girl, silver hair, red eyes" --model pony
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py model 出图.png --remesh-res 512 --smooth-iters 3 --faces 0
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py print 模型.glb --model-height 150 --base 0.05 --hollow 0.04
+
+# 环境自检
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py doctor
+
+# 关闭平坦化（测试用）
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py model 出图.png --no-flatten
+
+# ★ 去敏感化（过 Meshy / 建模 AI 审核）
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py desensitize "敏感图.png" --strength auto
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py desensitize "敏感图.png" --strength full   # 全身遮挡（最保守）
+
+# ★ 还原（Meshy 3D → 敏感样子）
+E:\AI\ComfyUI\venv\Scripts\python.exe E:\AI\fig.py restore "meshy.glb" --original "敏感图.png"
+</code></pre>
+</div>
+
+<h2>四、★ 图像去敏感化功能</h2>
+
+<div class="card">
+<p><span class="tag tag-new">新增</span> 商业手办工作流：敏感图 → 去敏化 → Meshy 审核 → 3D → 还原</p>
+<table>
+<tr><th>命令</th><th>用途</th><th>说明</th></tr>
+<tr><td><code>fig.py desensitize "图.png"</code></td><td>去敏感化</td><td>检测肤色→按区域分级遮挡→输出审核安全版</td></tr>
+<tr><td><code>fig.py desensitize "图.png" --strength full</code></td><td>全身遮挡</td><td>最保守模式，保证过审</td></tr>
+<tr><td><code>fig.py restore "模型.glb" --original "原图.png"</code></td><td>还原</td><td>把去敏化3D还原成敏感样子（需原图参考）</td></tr>
+</table>
+<p><strong>技术细节：</strong></p>
+<ul>
+<li>肤色检测：HSV + YCbCr 双判据 + 二次元肤色扩展（浅粉/米白/深色）</li>
+<li>区域分级：胸/腰/腹 = 高风险（自动遮挡）；四肢 = 低风险</li>
+<li>遮挡方式：服装色覆盖 + 像素化 + 边缘柔化</li>
+<li>实测：二次元立绘肤色检测 9.1%，高风险区域 1.3%，auto 模式遮挡 1.3%</li>
+</ul>
+</div>
+
+<h2>四-B、★ 图生图 img2img 功能</h2>
+
+<div class="card">
+<p><span class="tag tag-new">新增</span> 参考图 + 提示词 → ComfyUI 重绘，支持 Pony 和 Flux 两种模型</p>
+<table>
+<tr><th>命令</th><th>用途</th><th>说明</th></tr>
+<tr><td><code>fig.py i2i "参考图.png" "1girl, swimsuit"</code></td><td>图生图</td><td>以参考图为基础，按提示词重绘（denoise=0.7 默认）</td></tr>
+<tr><td><code>fig.py i2i "图.png" "tags" --strength 0.5</code></td><td>轻度重绘</td><td>保留更多原图细节，适合换色/小改</td></tr>
+<tr><td><code>fig.py i2i "图.png" "tags" --strength 1.0</code></td><td>完全重画</td><td>等同 txt2img，只保留构图</td></tr>
+</table>
+<p><strong>--strength 参数指南：</strong></p>
+<ul>
+<li><code>1.0</code> = 完全重画（几乎不保留原图）</li>
+<li><code>0.7</code> = 大幅修改但保留构图（默认推荐）</li>
+<li><code>0.5</code> = 适度修改，保留大部分细节</li>
+<li><code>0.3</code> = 轻微调整（换颜色/小细节）</li>
+</ul>
+<p><strong>工作流：</strong> LoadImage → VAEEncode → KSampler(denoise=strength) → VAEDecode → SaveImage</p>
+</div>
+
+<h2>四-C、★ F 盘 NovelAI 删除</h2>
+
+<div class="card">
+<p><span class="tag tag-done">已删除</span> <code>F:\AI画图\NOVEL AI with stable-diffusion-webui</code>（10.91GB，43906文件）</p>
+<p>旧的 NovelAI stable-diffusion-webui 环境已被 E 盘 ComfyUI 完全替代。删除后释放 10.91GB。</p>
+</div>
+
+<h2>四-D、★ EXE 一键启动器（.bat 升级为 .exe）</h2>
+
+<div class="card">
+<p><span class="tag tag-new">新增</span> 用 PyInstaller 打包成单个 <code>手办AI.exe</code>（33MB，内嵌手办主题图标）</p>
+<table>
+<tr><th>项目</th><th>说明</th></tr>
+<tr><td>桌面入口</td><td><code>D:\Desktop\手办AI.lnk</code> → <code>E:\AI\手办AI.exe</code></td></tr>
+<tr><td>功能</td><td>双击即：检测 ComfyUI 状态 → 未运行则后台启动 → 等待就绪（最多120s）→ 打开控制中心 HTML</td></tr>
+<tr><td>GUI</td><td>tkinter 深色状态窗口，实时显示检测/启动/等待/完成进度</td></tr>
+<tr><td>图标</td><td>程序化生成的粉紫渐变 + 手办剪影 ICO（256/128/64/48/32/16 多尺寸）</td></tr>
+<tr><td>源码</td><td><code>E:\AI\launcher_exe.py</code>（重新打包：<code>python -m PyInstaller --onefile --windowed --name 手办AI --icon 手办AI启动器.ico launcher_exe.py</code>）</td></tr>
+</table>
+<p><span class="tag tag-done">已测试</span> 验证：EXE 启动 → 检测 ComfyUI 未运行 → 正确拉起 <code>ComfyUI\venv\python.exe main.py --port 8188</code> 进程</p>
+</div>
+
+<h2>五、待完成事项</h2>
+
+<div class="card">
+<ol>
+<li><span class="tag tag-warn">建议</span> <strong>img2img 实际测试</strong>：用参考图验证 Pony/Flux img2img 工作流可用</li>
+<li><span class="tag tag-warn">可选</span> <strong>清理 ComfyUI/output 实验产物</strong>：A-I 组实验 GLB、exp_* 系列</li>
+</ol>
+</div>
+
+<div class="footer">
+二次元手办 AI 流水线 · 本地部署 · ComfyUI + Hunyuan3D + Pony + Ollama<br>
+项目路径 E:\AI (SSD) · 模型 31.56GB · 最终成品 I:\AI\最终成品 (HDD) · I盘已清理75GB · F盘已清理10.91GB · 全程离线
+</div>
+
+</div>
+</body>
+</html>

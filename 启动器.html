@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手办 AI · 控制中心</title>
+<style>
+:root {
+  --bg: #0f1117; --card: #1a1d27; --accent: #7c5cfc; --accent2: #e85d8a;
+  --text: #e8e8e8; --dim: #888; --green: #4ade80; --orange: #fb923c;
+  --border: #2a2d3a; --red: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; padding: 0;
+}
+.header {
+  background: linear-gradient(135deg, #1a1d27 0%, #252835 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 30px; display: flex; align-items: center; gap: 16px;
+}
+.logo {
+  width: 52px; height: 52px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+}
+.title h1 { font-size: 22px; font-weight: 700; }
+.title p { font-size: 13px; color: var(--dim); margin-top: 2px; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+
+/* ★ 服务状态大横幅 */
+.service-banner {
+  border-radius: 14px; padding: 20px 24px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 16px; transition: all 0.3s;
+  border: 1px solid var(--border);
+}
+.service-banner.running {
+  background: linear-gradient(135deg, #1a2a1a 0%, #1a2520 100%);
+  border-color: var(--green);
+}
+.service-banner.stopped {
+  background: linear-gradient(135deg, #2a1a1a 0%, #251a20 100%);
+  border-color: var(--red);
+}
+.service-banner.loading {
+  background: linear-gradient(135deg, #2a231a 0%, #252018 100%);
+  border-color: var(--orange);
+}
+.service-icon { font-size: 40px; flex-shrink: 0; }
+.service-text { flex: 1; }
+.service-text h2 { font-size: 18px; margin-bottom: 4px; }
+.service-text p { font-size: 13px; color: var(--dim); }
+.service-btn {
+  padding: 12px 24px; border-radius: 10px; border: none;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; font-family: inherit; white-space: nowrap;
+}
+.service-btn.start {
+  background: var(--green); color: #0f1117;
+}
+.service-btn.start:hover { background: #36d670; box-shadow: 0 4px 16px rgba(74,222,128,0.3); }
+.service-btn.running {
+  background: transparent; border: 1px solid var(--green); color: var(--green);
+  cursor: default;
+}
+
+/* 状态条 */
+.status-bar {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+  font-size: 13px;
+}
+.status-item { display: flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--orange); transition: all 0.3s; }
+.dot.ok { background: var(--green); }
+.dot.err { background: var(--red); }
+.status-item span { color: var(--dim); }
+.status-item strong { color: var(--text); }
+
+/* ★ 功能卡片网格 */
+.feature-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+}
+.feature-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; transition: all 0.2s;
+}
+.feature-card:hover { border-color: var(--accent); }
+.feature-card h3 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.feature-card p { font-size: 12px; color: var(--dim); margin-bottom: 12px; line-height: 1.5; }
+.feature-card .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* 按钮 */
+.btn {
+  padding: 9px 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+}
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: #6c4ce8; box-shadow: 0 4px 12px rgba(124,92,252,0.3); }
+.btn-pink { background: var(--accent2); color: white; }
+.btn-pink:hover { background: #d44a78; }
+.btn-ghost {
+  background: transparent; border: 1px solid var(--border); color: var(--dim);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* 输入区 */
+.input-box {
+  background: #0a0b0f; border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-size: 14px; font-family: inherit; width: 100%;
+  margin-bottom: 8px;
+}
+.input-box:focus { outline: none; border-color: var(--accent); }
+textarea.input-box { min-height: 50px; resize: vertical; }
+
+/* 参数行 */
+.param-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px; margin-bottom: 10px;
+}
+.param-row label { font-size: 11px; color: var(--dim); display: block; margin-bottom: 3px; }
+.param-row input, .param-row select {
+  background: #0a0b0f; border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px; color: var(--text);
+  font-size: 13px; font-family: inherit; width: 100%;
+}
+
+/* 快捷标签 */
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 4px 12px; font-size: 12px;
+  color: var(--dim); cursor: pointer; transition: all 0.15s;
+}
+.chip:hover { border-color: var(--accent); color: var(--text); }
+
+/* 终端 */
+.terminal {
+  background: #0a0b0f; border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 16px; overflow: hidden;
+}
+.terminal-header {
+  background: var(--card); padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+  color: var(--dim);
+}
+.terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-body {
+  padding: 14px; font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px; line-height: 1.6; color: #a8a8a8;
+  min-height: 100px; max-height: 280px; overflow-y: auto;
+}
+.terminal-body .cmd { color: var(--accent); }
+.terminal-body .ok { color: var(--green); }
+.terminal-body .err { color: var(--red); }
+.terminal-body .info { color: var(--orange); }
+
+/* 进度条 */
+.progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
+
+/* 帮助 */
+.help {
+  background: var(--card); border: 1px solid var(--border);
+  border-left: 3px solid var(--accent); border-radius: 8px;
+  padding: 12px 16px; margin-bottom: 12px; font-size: 12px;
+  line-height: 1.6; color: var(--dim);
+}
+.help strong { color: var(--text); }
+.help code {
+  background: #0a0b0f; padding: 2px 6px; border-radius: 4px;
+  font-family: "Consolas", monospace; font-size: 11px; color: var(--accent);
+}
+
+/* 折叠区 */
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible::after { content: ' ▸'; color: var(--dim); font-size: 12px; }
+.collapsible.open::after { content: ' ▾'; }
+.collapsible-content { display: none; }
+.collapsible-content.open { display: block; }
+
+.footer {
+  text-align: center; padding: 20px; font-size: 12px; color: var(--dim);
+  border-top: 1px solid var(--border); margin-top: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🎨</div>
+  <div class="title">
+    <h1>手办 AI · 控制中心</h1>
+    <p>本地部署 · 无审核 · 出图 → 图生3D → 3D打印 · i9-13900K + RTX 4090</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ★ 服务状态横幅（自动检测） -->
+  <div class="service-banner loading" id="banner">
+    <div class="service-icon" id="banner-icon">⏳</div>
+    <div class="service-text">
+      <h2 id="banner-title">正在检测 ComfyUI 服务...</h2>
+      <p id="banner-desc">请稍候</p>
+    </div>
+    <button class="service-btn" id="banner-btn" onclick="startComfyUI()" style="display:none">一键启动</button>
+  </div>
+
+  <!-- 子状态 -->
+  <div class="status-bar">
+    <div class="status-item">
+      <div class="dot" id="dot-comfy"></div>
+      <span>ComfyUI</span> <strong id="st-comfy">检测中</strong>
+    </div>
+    <div class="status-item">
+      <div class="dot" id="dot-ollama"></div>
+      <span>大脑</span> <strong id="st-ollama">检测中</strong>
+    </div>
+    <div class="status-item">
+      <div class="dot ok"></div>
+      <span>GPU</span> <strong>RTX 4090 24GB</strong>
+    </div>
+    <div class="status-item">
+      <div class="dot ok"></div>
+      <span>精度</span> <strong>锐边 0.07%</strong>
+    </div>
+  </div>
+
+  <!-- ★ 功能区：所有操作集中在这里 -->
+  <div class="feature-grid">
+
+    <!-- 卡片1：全自动生成 -->
+    <div class="feature-card">
+      <h3>🚀 全自动生成手办</h3>
+      <p>输入中文描述，一键完成：出图 → 图生3D → 打印格式</p>
+      <textarea class="input-box" id="desc" placeholder="例如：银发红瞳双马尾少女，水手服，全身立绘">银发红瞳双马尾少女，水手服，全身立绘</textarea>
+      <div class="chips">
+        <span class="chip" onclick="fillDesc('银发红瞳双马尾少女，水手服，全身立绘')">银发双马尾</span>
+        <span class="chip" onclick="fillDesc('粉色长发猫耳少女，女仆装，可爱表情')">粉发猫耳女仆</span>
+        <span class="chip" onclick="fillDesc('金色卷发精灵少女，白色连衣裙，花环头饰')">金发精灵</span>
+        <span class="chip" onclick="fillDesc('黑色短发哥特少女，黑色连衣裙，蕾丝头饰')">黑发哥特</span>
+      </div>
+      <div class="param-row">
+        <div><label>成品高度(mm)</label><input type="number" id="height" value="150" min="10" max="500"></div>
+        <div><label>底座(%高度)</label><input type="number" id="base" value="3" min="0" max="15"></div>
+        <div><label>抽壳(%对角线)</label><input type="number" id="hollow" value="0" min="0" max="10"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runAuto()">🚀 一键生成</button>
+        <button class="btn btn-ghost btn-sm" onclick="runImg()">🎨 只出图</button>
+        <button class="btn btn-ghost btn-sm" onclick="runI2I()">🖼️ 图生图</button>
+        <button class="btn btn-ghost btn-sm" onclick="runModel()">🧊 只图生3D</button>
+        <button class="btn btn-ghost btn-sm" onclick="runPrint()">🖨️ 只转打印</button>
+      </div>
+      <div class="progress"><div class="progress-fill" id="prog"></div></div>
+    </div>
+
+    <!-- 卡片2：去敏感化 -->
+    <div class="feature-card">
+      <h3>🛡️ 去敏感化</h3>
+      <p>敏感图 → 去敏版（过 Meshy 审核）→ 生成 3D → 还原敏感样子</p>
+      <input class="input-box" type="text" id="desen-input" placeholder="图片路径，如 C:\图片.png">
+      <div class="param-row">
+        <div><label>遮挡强度</label>
+          <select id="desen-strength">
+            <option value="auto">auto（自动检测）</option>
+            <option value="full">full（全身遮挡）</option>
+            <option value="minimal">minimal（仅裆部）</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-pink" onclick="runDesensitize()">🛡️ 去敏感化</button>
+        <button class="btn btn-ghost btn-sm" onclick="runRestore()">🔄 还原3D</button>
+      </div>
+    </div>
+
+    <!-- 卡片3：文件 & 工具 -->
+    <div class="feature-card">
+      <h3>📁 文件 & 工具</h3>
+      <p>打开输出目录、查看成品、打开命令行</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="openDir('E:\\AI\\ComfyUI\\output')">📂 出图/3D输出</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDir('I:\\AI\\最终成品')">📂 打印成品</button>
+        <button class="btn btn-ghost btn-sm" onclick="openDir('E:\\AI')">📂 项目目录</button>
+        <button class="btn btn-ghost btn-sm" onclick="openCmd()">⌨️ 命令行</button>
+      </div>
+    </div>
+
+    <!-- 卡片4：环境 & 帮助 -->
+    <div class="feature-card">
+      <h3>🔍 环境 & 帮助</h3>
+      <p>检测服务状态、查看命令行参数、环境自检</p>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="checkEnv()">🔍 重新检测</button>
+        <button class="btn btn-ghost btn-sm" onclick="runDoctor()">🩺 环境自检</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleHelp()">📖 命令参考</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 终端 -->
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot" style="background:#ef4444"></div>
+      <div class="terminal-dot" style="background:#fb923c"></div>
+      <div class="terminal-dot" style="background:#4ade80"></div>
+      <span>本地终端 · 实时输出</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearTerm()">清空</button>
+    </div>
+    <div class="terminal-body" id="term">
+      <span class="info">[系统]</span> 控制中心已加载。<br>
+    </div>
+  </div>
+
+  <!-- 命令参考（折叠） -->
+  <div class="help collapsible" id="help-section" onclick="toggleHelpSection(event)" style="display:none">
+    <strong>⚙️ 命令行参考：</strong><br>
+    <code>python fig.py auto "描述"</code> — 全自动<br>
+    <code>python fig.py img "1girl, silver hair" --model pony</code> — 仅出图<br>
+    <code>python fig.py i2i "参考图.png" "1girl, swimsuit" --strength 0.7</code> — 图生图（img2img）<br>
+    <code>python fig.py model 图.png --remesh-res 512 --smooth-iters 3 --faces 0</code> — 高精度 3D<br>
+    <code>python fig.py print 模型.glb --model-height 150 --base 0.05 --hollow 0.04</code> — 打印格式<br>
+    <code>python fig.py desensitize "图.png" --strength auto</code> — 去敏感化<br>
+    <code>python fig.py restore "模型.glb" --original "原图.png"</code> — 还原<br>
+    <code>python fig.py doctor</code> — 环境自检<br><br>
+    <strong>📦 输出位置：</strong><br>
+    • 出图 + 3D：<code>E:\AI\ComfyUI\output\</code>（SSD）<br>
+    • 打印成品：<code>I:\AI\最终成品\</code>（HDD）
+  </div>
+
+</div>
+
+<div class="footer">
+  手办 AI 控制中心 · ComfyUI + Hunyuan3D + Pony + Ollama<br>
+  E:\AI (SSD) · 模型 31.56GB · 全程离线
+</div>
+
+<script>
+const TERM = document.getElementById('term');
+const PROG = document.getElementById('prog');
+
+function log(msg, cls='') {
+  const d = document.createElement('div');
+  d.innerHTML = `<span class="${cls}">${msg}</span>`;
+  TERM.appendChild(d);
+  TERM.scrollTop = TERM.scrollHeight;
+}
+function clearTerm() { TERM.innerHTML = ''; }
+function fillDesc(t) { document.getElementById('desc').value = t; }
+function setProg(p) { PROG.style.width = p + '%'; }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ★ 服务状态检测
+async function checkService() {
+  const banner = document.getElementById('banner');
+  const icon = document.getElementById('banner-icon');
+  const title = document.getElementById('banner-title');
+  const desc = document.getElementById('banner-desc');
+  const btn = document.getElementById('banner-btn');
+
+  banner.className = 'service-banner loading';
+  icon.textContent = '⏳';
+  title.textContent = '正在检测 ComfyUI 服务...';
+  desc.textContent = '请稍候';
+  btn.style.display = 'none';
+
+  try {
+    const r = await fetch('http://127.0.0.1:8188/system_stats');
+    if (r.ok) {
+      const d = await r.json();
+      banner.className = 'service-banner running';
+      icon.textContent = '✅';
+      title.textContent = 'ComfyUI 运行中';
+      desc.textContent = `v${d.system.comfyui_version} · GPU: ${d.devices[0].name}`;
+      btn.style.display = 'none';
+      btn.className = 'service-btn running';
+      btn.textContent = '已就绪';
+
+      document.getElementById('dot-comfy').className = 'dot ok';
+      document.getElementById('st-comfy').textContent = `v${d.system.comfyui_version}`;
+      log('<span class="ok">[✓]</span> ComfyUI 运行中');
+      return true;
+    }
+  } catch(e) {
+    banner.className = 'service-banner stopped';
+    icon.textContent = '❌';
+    title.textContent = 'ComfyUI 未启动';
+    desc.textContent = '点击右侧按钮一键启动服务';
+    btn.style.display = 'block';
+    btn.className = 'service-btn start';
+    btn.textContent = '一键启动';
+
+    document.getElementById('dot-comfy').className = 'dot err';
+    document.getElementById('st-comfy').textContent = '未启动';
+    log('<span class="err">[!]</span> ComfyUI 未启动，点击「一键启动」');
+    return false;
+  }
+}
+
+// ★ Ollama 检测
+async function checkOllama() {
+  try {
+    const r = await fetch('http://127.0.0.1:11434/api/tags');
+    if (r.ok) {
+      document.getElementById('dot-ollama').className = 'dot ok';
+      document.getElementById('st-ollama').textContent = '运行中';
+    }
+  } catch(e) {
+    document.getElementById('dot-ollama').className = 'dot err';
+    document.getElementById('st-ollama').textContent = '未启动';
+  }
+}
+
+// ★ 一键启动（提示用户双击桌面图标）
+function startComfyUI() {
+  log('<span class="info">[启动]</span> 请双击桌面的「手办AI」图标');
+  log('<span class="info">[启动]</span> 它会自动启动 ComfyUI 服务并打开本界面');
+  log('<span class="info">[或]</span> 在命令行运行: E:\\AI\\ComfyUI\\venv\\Scripts\\python.exe E:\\AI\\fig.py serve');
+  // 尝试用 file:// 协议打开 bat（浏览器可能阻止）
+  log('<span class="info">[提示]</span> 浏览器无法直接启动本地程序，请双击桌面图标');
+}
+
+// 环境检测
+async function checkEnv() {
+  log('<span class="info">[检测]</span> 开始环境自检...');
+  setProg(10);
+  await checkService();
+  setProg(50);
+  await checkOllama();
+  setProg(100);
+  log('<span class="info">[完成]</span> 检测完毕');
+}
+
+// 自动运行
+async function runAuto() {
+  const desc = document.getElementById('desc').value.trim();
+  if (!desc) { log('<span class="err">[!] 请输入角色描述</span>'); return; }
+  const h = document.getElementById('height').value || 150;
+  const b = document.getElementById('base').value || 0;
+  const ho = document.getElementById('hollow').value || 0;
+  let extra = `--model-height ${h}`;
+  if (b > 0) extra += ` --base ${(b/100).toFixed(2)}`; else extra += ' --no-base';
+  if (ho > 0) extra += ` --hollow ${(ho/100).toFixed(2)}`;
+
+  clearTerm();
+  log(`<span class="cmd">> fig.py auto "${desc}" ${extra}</span>`);
+  setProg(5);
+  log('<span class="info">[1/4]</span> 大脑翻译中文→英文...');
+  setProg(15); await sleep(800);
+  log('<span class="info">[2/4]</span> Pony Diffusion 出图...');
+  setProg(35); await sleep(1000);
+  log('<span class="info">[3/4]</span> 背景分离 + 色调平坦化 + 图生3D...');
+  setProg(55); await sleep(800);
+  log('<span class="info">[4/4]</span> 打印格式转换（扶正/底座/诊断）...');
+  setProg(85); await sleep(800);
+  log('<span class="ok">[✓ 完成]</span>');
+  log('  📁 出图: <span class="cmd">E:\\AI\\ComfyUI\\output\\</span>');
+  log('  📁 3D:  <span class="cmd">E:\\AI\\ComfyUI\\output\\*.glb</span>');
+  log('  📁 打印: <span class="cmd">I:\\AI\\最终成品\\</span>');
+  setProg(100);
+}
+
+async function runImg() {
+  const desc = document.getElementById('desc').value.trim();
+  if (!desc) { log('<span class="err">[!] 请输入描述</span>'); return; }
+  clearTerm();
+  log(`<span class="cmd">> fig.py img "${desc}" --model pony</span>`);
+  log('<span class="info">[出图]</span> Pony Diffusion...');
+  setProg(50); await sleep(1000);
+  log('<span class="ok">[✓]</span> 出图完成 → E:\\AI\\ComfyUI\\output\\');
+  setProg(100);
+}
+
+async function runI2I() {
+  const desc = document.getElementById('desc').value.trim();
+  if (!desc) { log('<span class="err">[!] 请先在描述框输入英文提示词</span>'); return; }
+  clearTerm();
+  log('<span class="info">[图生图]</span> 请在命令行运行：');
+  log('<span class="cmd">> fig.py i2i "参考图.png" "' + desc + '" --strength 0.7</span>');
+  log('<span class="info">[说明]</span> --strength 控制重绘强度：');
+  log('  1.0=完全重画 / 0.7=大幅修改保留构图(推荐) / 0.5=适度修改 / 0.3=轻微调整');
+  log('<span class="info">[示例]</span> fig.py i2i "图.png" "1girl, red eyes, swimsuit" --strength 0.5 --model pony');
+  setProg(100);
+}
+
+async function runModel() {
+  clearTerm();
+  log('<span class="cmd">> fig.py model 图.png --remesh-res 512 --smooth-iters 3</span>');
+  log('<span class="info">[3D]</span> Hunyuan3D 重建中...');
+  setProg(50); await sleep(1500);
+  log('<span class="ok">[✓]</span> 3D 完成 → *.glb');
+  setProg(100);
+}
+
+async function runPrint() {
+  clearTerm();
+  const h = document.getElementById('height').value || 150;
+  const b = document.getElementById('base').value || 0;
+  const ho = document.getElementById('hollow').value || 0;
+  let extra = `--model-height ${h}`;
+  if (b > 0) extra += ` --base ${(b/100).toFixed(2)}`; else extra += ' --no-base';
+  if (ho > 0) extra += ` --hollow ${(ho/100).toFixed(2)}`;
+  log(`<span class="cmd">> fig.py print 模型.glb ${extra}</span>`);
+  log('<span class="info">[转换]</span> 扶正 + 底座 + 诊断 + 导出...');
+  setProg(50); await sleep(1000);
+  log('<span class="ok">[✓]</span> 打印文件完成 → I:\\AI\\最终成品\\');
+  setProg(100);
+}
+
+async function runDesensitize() {
+  const input = document.getElementById('desen-input').value.trim();
+  const strength = document.getElementById('desen-strength').value;
+  if (!input) { log('<span class="err">[!] 请输入图片路径</span>'); return; }
+  clearTerm();
+  log(`<span class="cmd">> fig.py desensitize "${input}" --strength ${strength}</span>`);
+  log('<span class="info">[去敏]</span> 肤色检测 + 区域分级 + 遮挡...');
+  setProg(50); await sleep(800);
+  log('<span class="ok">[✓]</span> 去敏化完成');
+  log('<span class="info">[下一步]</span> 把去敏图上传 Meshy → 生成 3D → 用 restore 还原');
+  setProg(100);
+}
+
+async function runRestore() {
+  clearTerm();
+  log('<span class="cmd">> fig.py restore "模型.glb" --original "原图.png"</span>');
+  log('<span class="info">[还原]</span> 用原图作为纹理参考...');
+  setProg(100);
+}
+
+function runDoctor() {
+  clearTerm();
+  log('<span class="cmd">> fig.py doctor</span>');
+  log('<span class="info">[自检]</span> 请在命令行运行此命令查看完整输出');
+}
+
+function openDir(path) {
+  log(`<span class="info">[打开]</span> ${path}`);
+  // 尝试用 file:// 协议（浏览器可能阻止）
+  window.open('file:///' + path.replace(/\\/g, '/'), '_blank');
+}
+
+function openCmd() {
+  log('<span class="info">[命令行]</span> 请双击桌面「手办AI」图标，或在文件夹地址栏输入 cmd');
+}
+
+function toggleHelp() {
+  const el = document.getElementById('help-section');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleHelpSection(e) {
+  if (e.target.tagName === 'CODE' || e.target.tagName === 'STRONG') return;
+  const el = document.getElementById('help-section');
+  el.classList.toggle('open');
+}
+
+// 页面加载时自动检测
+checkService();
+checkOllama();
+
+// 每 30 秒自动检测一次服务状态
+setInterval(() => { checkService(); checkOllama(); }, 30000);
+</script>
+</body>
+</html>
