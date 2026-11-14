@@ -67,6 +67,9 @@ body {
   font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap;
 }
 .service-btn.start { background: var(--green); color: #0f1117; }
+.vram-tools { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.vram-tools .btn { margin: 0; }
+.vram-tools label { font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 3px; cursor: pointer; white-space: nowrap; }
 .service-btn.running { background: transparent; border: 1px solid var(--green); color: var(--green); cursor: default; }
 
 /* ---------- 主区：砌体多栏（宽屏自动多列，减少纵向滚动） ---------- */
@@ -258,7 +261,12 @@ select.input-box { cursor: pointer; }
   <div class="statusline">
     <div class="status-item"><div class="dot" id="dot-comfy"></div>ComfyUI <strong id="st-comfy">检测中</strong></div>
     <div class="status-item"><div class="dot" id="dot-ollama"></div>大脑 <strong id="st-ollama">检测中</strong></div>
-    <div class="status-item"><div class="dot ok"></div>GPU <strong>RTX 4090 24GB</strong></div>
+    <div class="status-item"><div class="dot" id="dot-gpu"></div>显存 <strong id="st-gpu">检测中</strong></div>
+    <div class="vram-tools">
+      <button class="btn btn-ghost btn-sm" type="button" id="btn-vram-soft" onclick="releaseVram('soft')" title="卸载 ComfyUI / Ollama 里的模型并清空显存缓存，ComfyUI 服务保留">🧹 释放显存</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="btn-vram-full" onclick="releaseVram('full')" title="释放后再停止 ComfyUI 进程，显存完全归还；再次出图前点「一键启动」">⏏ 完全释放</button>
+      <label title="关闭这个页面约 20 秒后（或页面失联 3 分钟后），若没有任务在跑，自动完全释放显存"><input type="checkbox" id="auto-release-vram" onchange="setAutoRelease(this.checked)">关页面自动释放</label>
+    </div>
     <div class="service-banner loading" id="banner">
       <div class="service-icon" id="banner-icon">⏳</div>
       <div class="service-text">
@@ -855,7 +863,13 @@ async function checkService() {
   }
 }
 async function checkOllama() {}
-async function startComfyUI() { safeLog('请双击桌面「手办AI」图标启动。'); }
+async function startComfyUI() {
+  if (!hasBackend) { safeLog('请双击桌面「手办AI」图标启动。'); return; }
+  try {
+    const r = await callApi('/api/start_comfyui', {});
+    safeLog(r.started ? '[*] 正在后台启动 ComfyUI，约 30~60 秒后就绪…' : '[*] ComfyUI 已在运行');
+  } catch (e) { safeLog('启动 ComfyUI 失败: ' + e.message); }
+}
 async function checkEnv() { await checkService(); }
 
 /* ================= 图生图：主图 + 多参考图 ================= */
@@ -1602,17 +1616,65 @@ async function loadMeshyBalance() {
   } catch (e) { el.textContent = '连接失败'; el.title = e.message; }
 }
 
+/* ================= 显存：读数 / 一键释放 / 关页面自动释放 ================= */
+let autoReleaseOnClose = true;
+try { autoReleaseOnClose = localStorage.getItem('fig.autoReleaseVram') !== '0'; } catch (e) {}
+document.getElementById('auto-release-vram').checked = autoReleaseOnClose;
+function setAutoRelease(on) {
+  autoReleaseOnClose = !!on;
+  try { localStorage.setItem('fig.autoReleaseVram', on ? '1' : '0'); } catch (e) {}
+  sendHeartbeat();
+}
+async function refreshGpu() {
+  if (!hasBackend) return;
+  const el = document.getElementById('st-gpu'), dot = document.getElementById('dot-gpu');
+  try {
+    const g = (await callApi('/api/gpu')).gpu;
+    if (!g) { el.textContent = '无法读取'; dot.className = 'dot'; return; }
+    const ratio = g.used_mb / g.total_mb;
+    el.textContent = `${(g.used_mb / 1024).toFixed(1)} / ${(g.total_mb / 1024).toFixed(0)} GB`;
+    el.title = (g.processes || []).map(p => `${p.name} (PID ${p.pid})${p.used_mb != null ? ' ' + p.used_mb + 'MB' : ''}`).join('\n') || '没有进程占用显存';
+    dot.className = 'dot ' + (ratio > 0.8 ? 'err' : 'ok');
+  } catch (e) { el.textContent = '无法读取'; }
+}
+async function releaseVram(mode) {
+  const btns = [document.getElementById('btn-vram-soft'), document.getElementById('btn-vram-full')];
+  btns.forEach(b => b.disabled = true);
+  safeLog(mode === 'full' ? '[*] 完全释放显存：卸载模型并停止 ComfyUI…' : '[*] 释放显存：卸载模型、清理缓存…');
+  try {
+    const r = (await callApi('/api/release_vram', {mode})).report;
+    const gb = v => v == null ? '?' : (v / 1024).toFixed(1);
+    safeLog(`[✓] 显存 ${gb(r.before_mb)} GB → ${gb(r.after_mb)} GB（释放 ${gb(r.freed_mb)} GB）`);
+    const left = (r.remaining_processes || []).map(p => p.name).filter(Boolean);
+    if (left.length) safeLog('    仍占用显存的进程：' + left.join('、') + '（不是本工具启动的不会被结束）');
+    if (mode === 'soft' && r.comfyui === 'ok') safeLog('    ComfyUI 仍保留约 0.5~1.5GB 运行时上下文；要全部归还请点「⏏ 完全释放」');
+  } catch (e) { safeLog('释放显存失败: ' + e.message); }
+  btns.forEach(b => b.disabled = false);
+  refreshGpu(); checkService();
+}
+function sendHeartbeat() { callApi('/api/heartbeat?auto=' + (autoReleaseOnClose ? '1' : '0')).catch(() => {}); }
+// 关闭/刷新页面时通知后端；刷新后的新页面会马上发心跳，后端据此取消释放。
+window.addEventListener('pagehide', () => {
+  if (!hasBackend) return;
+  try {
+    fetch(API + '/api/page_closed', {method: 'POST', keepalive: true,
+      headers: {'Content-Type': 'application/json'}, body: JSON.stringify({auto: autoReleaseOnClose})});
+  } catch (e) {}
+});
+
 // 页面加载时自动检测
 checkService();
+refreshGpu();
+setInterval(refreshGpu, 6000);
 checkOllama();
 loadRecentOutputs(true);
 loadMeshyBalance();
 loadMeshyKeyInfo();
 mvRender();
 setInterval(() => { checkService(); }, 3000);
-/* 页面心跳：关闭工具 10 分钟后自动停止 ComfyUI 并释放显存 */
-callApi('/api/heartbeat').catch(()=>{});
-setInterval(() => { callApi('/api/heartbeat').catch(()=>{}); }, 15000);
+/* 页面心跳：后端据此判断页面是否还开着（关页面 20 秒 / 失联 3 分钟后自动完全释放显存） */
+sendHeartbeat();
+setInterval(sendHeartbeat, 15000);
 </script>
 <script src="completion.js"></script>
 </body>

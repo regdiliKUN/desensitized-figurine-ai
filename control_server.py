@@ -2,6 +2,7 @@ import atexit, base64, http.server, io, json, os, re, secrets, subprocess, threa
 from pathlib import Path
 
 from paths_config import FINAL_DIR, find_python_with_trimesh
+import vram_release
 
 ROOT = Path(__file__).resolve().parent
 PY = ROOT / 'ComfyUI' / 'venv' / 'Scripts' / 'python.exe'
@@ -13,7 +14,14 @@ lock = threading.Lock()
 # 控制中心页面心跳：浏览器关闭/工具退出后，若 10 分钟没有心跳且无任务在跑，
 # 自动终止 ComfyUI 并释放显存。仅在页面曾经连上过时生效，避免误杀手动启动。
 LAST_HEARTBEAT = 0.0
-COMFY_IDLE_SECONDS = 600
+# 页面没有正常发出“关闭”通知（浏览器崩溃、直接杀进程）时的兜底：失联这么久就释放。
+# 心跳 15 秒一次；后台标签页会被浏览器节流到约 1 分钟一次，所以留 3 分钟余量。
+COMFY_IDLE_SECONDS = 180
+# 页面关闭（pagehide）后等待的秒数：刷新页面或还有别的标签页开着时，
+# 这段时间内会收到新心跳，从而取消释放。
+PAGE_CLOSE_GRACE_SECONDS = 20
+PAGE_CLOSED_AT = 0.0
+AUTO_RELEASE = True  # 页面上的“关闭后自动释放显存”开关，随心跳同步
 
 
 def stop_comfyui(reason='idle'):
@@ -87,23 +95,56 @@ def _comfyui_running():
         return False
 
 
+def release_vram(mode='soft', reason='manual'):
+    """一键释放显存：soft=卸载模型清缓存保留服务；full=再结束 ComfyUI 进程，完全归还。"""
+    print(f'[*] 释放显存请求：{mode}（{reason}）', flush=True)
+    return vram_release.release(mode, stop_comfyui=stop_comfyui)
+
+
+def _job_running():
+    with lock:
+        return bool(jobs.get('running'))
+
+
 def comfyui_idle_watchdog():
-    """后台看门狗：页面失联且空闲时释放显存。"""
+    """后台看门狗：页面关闭或失联、且没有任务在跑时，完全释放显存。
+
+    触发条件（满足其一）：
+      1. 页面发出了关闭通知，且之后 PAGE_CLOSE_GRACE_SECONDS 秒内没有新心跳；
+      2. 页面曾连上过，但已 COMFY_IDLE_SECONDS 秒没有心跳（崩溃/强杀兜底）。
+    有任务在跑时先不动，任务结束后下一轮再释放。
+    """
+    global LAST_HEARTBEAT, PAGE_CLOSED_AT
     while True:
-        time.sleep(30)
-        if not LAST_HEARTBEAT:
+        time.sleep(5)
+        now = time.time()
+        closed = bool(PAGE_CLOSED_AT) and LAST_HEARTBEAT <= PAGE_CLOSED_AT \
+            and now - PAGE_CLOSED_AT >= PAGE_CLOSE_GRACE_SECONDS
+        lost = bool(LAST_HEARTBEAT) and now - LAST_HEARTBEAT >= COMFY_IDLE_SECONDS
+        if not (closed or lost) or not AUTO_RELEASE:
             continue
-        if time.time() - LAST_HEARTBEAT < COMFY_IDLE_SECONDS:
+        if _job_running() or vram_release.comfyui_busy():
             continue
-        with lock:
-            if jobs.get('running'):
-                continue
-        removed = stop_comfyui('UI closed / idle')
-        if removed or not _comfyui_running():
-            # 本次会话只清理一次；页面重新打开后会重新开始心跳。
-            globals()['LAST_HEARTBEAT'] = 0.0
-        else:
-            print('[*] ComfyUI 仍在运行，30 秒后重试自动释放', flush=True)
+        try:
+            release_vram('full', 'UI closed' if closed else 'UI heartbeat lost')
+        except Exception as exc:  # noqa: BLE001
+            print(f'[!] 自动释放显存失败：{exc}', flush=True)
+        if vram_release.comfyui_running():
+            print('[*] ComfyUI 仍在运行，稍后重试自动释放', flush=True)
+            continue
+        # 本次会话只清理一次；页面重新打开后会重新开始心跳。
+        LAST_HEARTBEAT = 0.0
+        PAGE_CLOSED_AT = 0.0
+
+
+def start_comfyui():
+    """后台启动 ComfyUI（完全释放后再次出图前用）。已在运行则直接返回。"""
+    if vram_release.comfyui_running():
+        return False
+    comfy_dir = ROOT / 'ComfyUI'
+    subprocess.Popen([str(PY), 'main.py', '--port', '8188'], cwd=str(comfy_dir),
+                     creationflags=getattr(subprocess, 'CREATE_NEW_CONSOLE', 0))
+    return True
 
 
 CAPTION_FIELDS = ("subject", "pose", "hair_and_face", "clothing", "accessories", "style_and_composition")
@@ -266,8 +307,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 files.append({'path': str(p), 'name': p.name, 'mtime': int(p.stat().st_mtime)})
             self.send_json({'files': files}); return
         if route == '/api/heartbeat':
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            globals()['AUTO_RELEASE'] = q.get('auto', ['1'])[0] != '0'
             globals()['LAST_HEARTBEAT'] = time.time()
             self.send_json({'ok': True}); return
+        if route == '/api/gpu':
+            self.send_json({'gpu': vram_release.gpu_usage(),
+                            'comfy_running': vram_release.comfyui_running()}); return
         if route == '/api/status':
             with lock: data = dict(jobs)
             qwen_files = [
@@ -296,6 +342,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if size > 8 * 1024 * 1024: raise ValueError('请求过大')
             body = json.loads(self.rfile.read(size))
             route = urllib.parse.urlsplit(self.path).path[len(PREFIX):]
+            if route == '/api/page_closed':
+                # 页面关闭（pagehide + keepalive fetch）。auto=false 表示用户关掉了自动释放。
+                globals()['AUTO_RELEASE'] = bool(body.get('auto', True))
+                if AUTO_RELEASE:
+                    globals()['PAGE_CLOSED_AT'] = time.time()
+                self.send_json({'ok': True}); return
+            if route == '/api/release_vram':
+                mode = str(body.get('mode', 'soft'))
+                if mode not in ('soft', 'full'): raise ValueError('未知释放模式')
+                if _job_running(): raise ValueError('有任务正在运行，等任务结束后再释放显存')
+                if vram_release.comfyui_busy(): raise ValueError('ComfyUI 队列里还有任务，等它跑完再释放')
+                self.send_json({'ok': True, 'report': release_vram(mode, 'manual')}); return
+            if route == '/api/start_comfyui':
+                self.send_json({'ok': True, 'started': start_comfyui()}); return
             if route == '/api/completion_validate':
                 import completion
                 project, image = completion.validate_project(body.get('project'))
