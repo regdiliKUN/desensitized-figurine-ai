@@ -23,3 +23,14 @@ icons/
 # ── 系统文件 ──
 Thumbs.db
 .DS_Store
+
+# Model download staging and resumable cache
+/.figurine-downloads/
+/.figurine-hf-cache/
+meshy_config.json
+
+# 本地缓存（解释器探测结果等）
+.fig_cache/
+
+# 生成的打印成品与校验中间文件（体积大）
+print_ready/
