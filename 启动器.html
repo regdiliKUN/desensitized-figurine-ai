@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -7,155 +7,208 @@
 <style>
 :root {
   --bg: #0f1117; --card: #1a1d27; --accent: #7c5cfc; --accent2: #e85d8a;
-  --text: #e8e8e8; --dim: #888; --green: #4ade80; --orange: #fb923c;
+  --text: #e8e8e8; --dim: #8b8f9c; --green: #4ade80; --orange: #fb923c;
   --border: #2a2d3a; --red: #ef4444;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-  background: var(--bg); color: var(--text);
-  min-height: 100vh; padding: 0;
+  background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh;
 }
-.header {
-  background: linear-gradient(135deg, #1a1d27 0%, #252835 100%);
-  border-bottom: 1px solid var(--border);
-  padding: 20px 30px; display: flex; align-items: center; gap: 16px;
+
+/* ---------- 顶部栏（固定在顶部，不占滚动区） ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 16px; background: rgba(15, 17, 23, .97);
+  border-bottom: 1px solid var(--border); backdrop-filter: blur(8px);
 }
+.brand { display: flex; align-items: center; gap: 9px; }
 .logo {
-  width: 52px; height: 52px; border-radius: 12px;
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
 }
-.title h1 { font-size: 22px; font-weight: 700; }
-.title p { font-size: 13px; color: var(--dim); margin-top: 2px; }
-
-.container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
-
-/* ★ 服务状态大横幅 */
-.service-banner {
-  border-radius: 14px; padding: 20px 24px; margin-bottom: 20px;
-  display: flex; align-items: center; gap: 16px; transition: all 0.3s;
-  border: 1px solid var(--border);
+.title h1 { font-size: 15px; font-weight: 700; line-height: 1.2; }
+.title p { font-size: 10.5px; color: var(--dim); margin-top: 1px; }
+.nav { display: flex; gap: 5px; flex-wrap: wrap; margin-left: 8px; }
+.nav a {
+  font-size: 11.5px; color: var(--dim); text-decoration: none;
+  border: 1px solid var(--border); padding: 3px 9px; border-radius: 20px;
+  white-space: nowrap; transition: all .15s;
 }
-.service-banner.running {
-  background: linear-gradient(135deg, #1a2a1a 0%, #1a2520 100%);
-  border-color: var(--green);
-}
-.service-banner.stopped {
-  background: linear-gradient(135deg, #2a1a1a 0%, #251a20 100%);
-  border-color: var(--red);
-}
-.service-banner.loading {
-  background: linear-gradient(135deg, #2a231a 0%, #252018 100%);
-  border-color: var(--orange);
-}
-.service-icon { font-size: 40px; flex-shrink: 0; }
-.service-text { flex: 1; }
-.service-text h2 { font-size: 18px; margin-bottom: 4px; }
-.service-text p { font-size: 13px; color: var(--dim); }
-.service-btn {
-  padding: 12px 24px; border-radius: 10px; border: none;
-  font-size: 15px; font-weight: 700; cursor: pointer;
-  transition: all 0.15s; font-family: inherit; white-space: nowrap;
-}
-.service-btn.start {
-  background: var(--green); color: #0f1117;
-}
-.service-btn.start:hover { background: #36d670; box-shadow: 0 4px 16px rgba(74,222,128,0.3); }
-.service-btn.running {
-  background: transparent; border: 1px solid var(--green); color: var(--green);
-  cursor: default;
-}
-
-/* 状态条 */
-.status-bar {
-  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
-  font-size: 13px;
-}
-.status-item { display: flex; align-items: center; gap: 6px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--orange); transition: all 0.3s; }
+.nav a:hover { color: #fff; border-color: var(--accent); background: rgba(124,92,252,.12); }
+.statusline { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.status-item { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--dim); }
+.status-item strong { color: var(--text); font-weight: 600; }
+@media(max-width:600px){.statusline{min-width:0;max-width:100%}.service-banner{min-width:0}.service-text{min-width:0}.service-text p{max-width:140px}}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); transition: all .3s; }
 .dot.ok { background: var(--green); }
 .dot.err { background: var(--red); }
-.status-item span { color: var(--dim); }
-.status-item strong { color: var(--text); }
 
-/* ★ 功能卡片网格 */
-.feature-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+/* 服务状态压缩成小胶囊 */
+.service-banner {
+  display: flex; align-items: center; gap: 7px; padding: 4px 9px;
+  border-radius: 20px; border: 1px solid var(--border); font-size: 11.5px;
+  transition: all .3s; max-width: 100%;
 }
+.service-banner.running { background: rgba(74,222,128,.10); border-color: var(--green); }
+.service-banner.stopped { background: rgba(239,68,68,.10); border-color: var(--red); }
+.service-banner.loading { background: rgba(251,146,60,.10); border-color: var(--orange); }
+.service-icon { font-size: 13px; }
+.service-text h2 { font-size: 11.5px; margin: 0; font-weight: 600; white-space: nowrap; }
+.service-text p {
+  font-size: 10.5px; margin: 0; color: var(--dim); max-width: 260px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.service-btn {
+  padding: 2px 9px; border-radius: 20px; border: none; font-size: 11px;
+  font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.service-btn.start { background: var(--green); color: #0f1117; }
+.service-btn.running { background: transparent; border: 1px solid var(--green); color: var(--green); cursor: default; }
+
+/* ---------- 主区：砌体多栏（宽屏自动多列，减少纵向滚动） ---------- */
+.dashboard { columns: 4; column-gap: 12px; padding: 12px 16px 18px; }
+@media (max-width: 2200px) { .dashboard { columns: 3; } }
+@media (max-width: 1250px) { .dashboard { columns: 2; } }
+@media (max-width: 900px) { .dashboard { columns: 1; } }
+
+
 .feature-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 14px; padding: 20px; transition: all 0.2s;
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; margin: 0 0 12px; break-inside: avoid; transition: border-color .2s;
 }
-.feature-card:hover { border-color: var(--accent); }
-.feature-card h3 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-.feature-card p { font-size: 12px; color: var(--dim); margin-bottom: 12px; line-height: 1.5; }
-.feature-card .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.feature-card:hover { border-color: rgba(124,92,252,.55); }
+.feature-card h3 { font-size: 14.5px; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+.feature-card h3 .tag {
+  font-size: 10px; font-weight: 400; color: var(--dim);
+  border: 1px solid var(--border); border-radius: 10px; padding: 1px 6px;
+}
+.feature-card p { font-size: 11.5px; color: var(--dim); margin-bottom: 8px; line-height: 1.5; }
+.hint { font-size: 11px; color: var(--dim); line-height: 1.5; margin: 4px 0 6px; }
+.flex-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
 
 /* 按钮 */
 .btn {
-  padding: 9px 18px; border-radius: 8px; border: none;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  transition: all 0.15s; font-family: inherit;
+  padding: 6px 13px; border-radius: 7px; border: none; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: all .15s; font-family: inherit;
 }
 .btn-primary { background: var(--accent); color: white; }
-.btn-primary:hover { background: #6c4ce8; box-shadow: 0 4px 12px rgba(124,92,252,0.3); }
+.btn-primary:hover { background: #6c4ce8; box-shadow: 0 3px 10px rgba(124,92,252,.3); }
 .btn-pink { background: var(--accent2); color: white; }
 .btn-pink:hover { background: #d44a78; }
-.btn-ghost {
-  background: transparent; border: 1px solid var(--border); color: var(--dim);
-}
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--dim); }
 .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
-.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; }
 
 /* 输入区 */
+label { font-size: 11.5px; color: var(--dim); }
 .input-box {
-  background: #0a0b0f; border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px 12px; color: var(--text);
-  font-size: 14px; font-family: inherit; width: 100%;
-  margin-bottom: 8px;
+  background: #0a0b0f; border: 1px solid var(--border); border-radius: 7px;
+  padding: 6px 10px; color: var(--text); font-size: 12.5px;
+  font-family: inherit; width: 100%; margin-bottom: 6px;
 }
 .input-box:focus { outline: none; border-color: var(--accent); }
-textarea.input-box { min-height: 50px; resize: vertical; }
+textarea.input-box { min-height: 44px; resize: vertical; }
+select.input-box { cursor: pointer; }
 
 /* 参数行 */
 .param-row {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px; margin-bottom: 10px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 8px; margin-bottom: 8px;
 }
-.param-row label { font-size: 11px; color: var(--dim); display: block; margin-bottom: 3px; }
+.param-row label { font-size: 10.5px; display: block; margin-bottom: 2px; }
 .param-row input, .param-row select {
-  background: #0a0b0f; border: 1px solid var(--border);
-  border-radius: 6px; padding: 7px; color: var(--text);
-  font-size: 13px; font-family: inherit; width: 100%;
+  background: #0a0b0f; border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 7px; color: var(--text); font-size: 12px; font-family: inherit; width: 100%;
 }
 
 /* 快捷标签 */
-.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
 .chip {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 16px; padding: 4px 12px; font-size: 12px;
-  color: var(--dim); cursor: pointer; transition: all 0.15s;
+  background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 3px 10px; font-size: 11px; color: var(--dim); cursor: pointer; transition: all .15s;
 }
 .chip:hover { border-color: var(--accent); color: var(--text); }
 
+/* 参考图槽位 */
+.ref-list { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 6px; }
+.ref-chip {
+  display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--dim);
+  background: #0a0b0f; border: 1px solid var(--border); border-radius: 7px; padding: 3px 6px;
+}
+.ref-chip img { width: 34px; height: 34px; object-fit: cover; border-radius: 5px; background: #14161f; flex-shrink: 0; }
+.ref-chip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ref-chip button {
+  background: transparent; border: none; color: var(--dim); cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0 3px;
+}
+.ref-chip button:hover { color: var(--red); }
+
+/* 涂抹画布 */
+.mask-wrap { position: relative; width: 100%; max-width: 420px; margin: 6px auto 0; touch-action: none; }
+.mask-wrap img { display: none; width: 100%; border-radius: 8px; }
+.mask-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.mask-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 11px; }
+.mask-toolbar input[type=range] { width: 92px; vertical-align: middle; }
+.mask-toolbar input[type=color] { width: 30px; height: 22px; border: none; background: none; padding: 0; cursor: pointer; }
+
+/* 意图 / 结果 */
+.intent { font-size: 11px; color: var(--dim); margin: 2px 0 6px; line-height: 1.5; }
+.result-img { display: none; max-width: 100%; margin-top: 8px; border-radius: 8px; }
+.result-path { margin-top: 4px; color: #8b8f9c; font-size: 10.5px; overflow-wrap: anywhere; }
+
+/* 修改图片候选方案 */
+.cand-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.cand-item { background: #141722; border: 1px solid var(--border); border-radius: 7px; padding: 4px; cursor: pointer; }
+.cand-item:hover { border-color: var(--accent); }
+.cand-item img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 5px; display: block; background: #0a0b0f; }
+.cand-item span { display: block; font-size: 10px; color: var(--dim); padding-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 多视图测试图 */
+.mv-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 4px; }
+@media (max-width: 1400px) { .mv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mv-slot { background: #141722; border: 1px solid var(--border); border-radius: 9px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.mv-slot.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(124,92,252,.4); }
+.mv-head { display: flex; align-items: center; gap: 5px; font-size: 11.5px; }
+.mv-head input { margin: 0; }
+.mv-name { font-weight: 600; }
+.mv-angle { color: var(--dim); font-size: 10px; margin-left: auto; }
+.mv-thumb { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #0a0b0f; border-radius: 6px; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.mv-thumb img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.mv-thumb .mv-empty { font-size: 10.5px; color: var(--dim); }
+.mv-thumb.busy { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.mv-extra { width: 100%; background: #0a0b0f; border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 10.5px; padding: 3px 5px; }
+.mv-extra::placeholder { color: #666; }
+.mv-slot .btn-row { margin: 0; }
+.mv-slot .btn { flex: 1; padding: 3px 4px; font-size: 10.5px; }
+
+/* 最近输出画廊 */
+.recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.thumb {
+  cursor: pointer; background: #0a0b0f; border: 1px solid var(--border);
+  border-radius: 7px; overflow: hidden; transition: border-color .15s;
+}
+.thumb img { width: 100%; height: 70px; object-fit: cover; display: block; background: #14161f; }
+.thumb span { display: block; font-size: 9.5px; color: var(--dim); padding: 2px 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thumb:hover { border-color: var(--accent); }
+#preview-modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.85); align-items: center; justify-content: center; padding: 20px; }
+#preview-modal img { max-width: 94vw; max-height: 90vh; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+
 /* 终端 */
-.terminal {
-  background: #0a0b0f; border: 1px solid var(--border);
-  border-radius: 12px; margin-bottom: 16px; overflow: hidden;
-}
+.terminal { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #0a0b0f; }
 .terminal-header {
-  background: var(--card); padding: 8px 14px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px; font-size: 12px;
-  color: var(--dim);
+  background: var(--card); padding: 5px 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dim);
 }
-.terminal-dot { width: 10px; height: 10px; border-radius: 50%; }
+.terminal-dot { width: 8px; height: 8px; border-radius: 50%; }
 .terminal-body {
-  padding: 14px; font-family: "Consolas", "Courier New", monospace;
-  font-size: 13px; line-height: 1.6; color: #a8a8a8;
-  min-height: 100px; max-height: 280px; overflow-y: auto;
+  padding: 8px 10px; font-family: "Consolas", "Courier New", monospace;
+  font-size: 11.5px; line-height: 1.55; color: #a8a8a8;
+  min-height: 90px; max-height: 210px; overflow-y: auto;
 }
 .terminal-body .cmd { color: var(--accent); }
 .terminal-body .ok { color: var(--green); }
@@ -163,112 +216,347 @@ textarea.input-box { min-height: 50px; resize: vertical; }
 .terminal-body .info { color: var(--orange); }
 
 /* 进度条 */
-.progress { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
-.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; width: 0%; }
+.progress { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; width: 0%; }
 
 /* 帮助 */
 .help {
-  background: var(--card); border: 1px solid var(--border);
-  border-left: 3px solid var(--accent); border-radius: 8px;
-  padding: 12px 16px; margin-bottom: 12px; font-size: 12px;
-  line-height: 1.6; color: var(--dim);
+  background: #141722; border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 8px 11px; margin-top: 8px; font-size: 11px;
+  line-height: 1.65; color: var(--dim);
 }
 .help strong { color: var(--text); }
 .help code {
-  background: #0a0b0f; padding: 2px 6px; border-radius: 4px;
-  font-family: "Consolas", monospace; font-size: 11px; color: var(--accent);
+  background: #0a0b0f; padding: 1px 5px; border-radius: 4px;
+  font-family: "Consolas", monospace; font-size: 10.5px; color: var(--accent);
 }
-
-/* 折叠区 */
 .collapsible { cursor: pointer; user-select: none; }
-.collapsible::after { content: ' ▸'; color: var(--dim); font-size: 12px; }
-.collapsible.open::after { content: ' ▾'; }
-.collapsible-content { display: none; }
-.collapsible-content.open { display: block; }
-
-.footer {
-  text-align: center; padding: 20px; font-size: 12px; color: var(--dim);
-  border-top: 1px solid var(--border); margin-top: 20px;
-}
+.footer { text-align: center; padding: 10px; font-size: 10.5px; color: var(--dim); border-top: 1px solid var(--border); }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">🎨</div>
-  <div class="title">
-    <h1>手办 AI · 控制中心</h1>
-    <p>本地部署 · 无审核 · 出图 → 图生3D → 3D打印 · i9-13900K + RTX 4090</p>
+<!-- ================= 顶部栏 ================= -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">🎨</div>
+    <div class="title">
+      <h1>手办 AI · 控制中心</h1>
+      <p>本地离线 · 出图 → 修图 → 图生3D → 3D打印</p>
+    </div>
+  </div>
+  <nav class="nav">
+    <a href="#card-auto">🚀 全自动</a>
+    <a href="#card-i2i">🖼️ 图生图</a>
+    <a href="#card-multiview">📐 多视图</a>
+    <a href="#card-modeledit">🧩 模型修改</a>
+    <a href="#card-edit">✏️ 修图</a>
+    <a href="#card-desen">🛡️ 去敏感</a>
+    <a href="#card-tools">📁 工具</a>
+    <a href="#card-log">🖥️ 日志</a>
+  </nav>
+  <div class="statusline">
+    <div class="status-item"><div class="dot" id="dot-comfy"></div>ComfyUI <strong id="st-comfy">检测中</strong></div>
+    <div class="status-item"><div class="dot" id="dot-ollama"></div>大脑 <strong id="st-ollama">检测中</strong></div>
+    <div class="status-item"><div class="dot ok"></div>GPU <strong>RTX 4090 24GB</strong></div>
+    <div class="service-banner loading" id="banner">
+      <div class="service-icon" id="banner-icon">⏳</div>
+      <div class="service-text">
+        <h2 id="banner-title">正在检测服务…</h2>
+        <p id="banner-desc">请稍候</p>
+      </div>
+      <button class="service-btn" id="banner-btn" onclick="startComfyUI()" style="display:none">一键启动</button>
+    </div>
   </div>
 </div>
 
-<div class="container">
+<main class="dashboard">
 
-  <!-- ★ 服务状态横幅（自动检测） -->
-  <div class="service-banner loading" id="banner">
-    <div class="service-icon" id="banner-icon">⏳</div>
-    <div class="service-text">
-      <h2 id="banner-title">正在检测 ComfyUI 服务...</h2>
-      <p id="banner-desc">请稍候</p>
+  <!-- ============ 卡片：全自动生成 ============ -->
+  <section class="feature-card" id="card-auto">
+    <h3>🚀 全自动生成手办</h3>
+    <p>一句话出图 → 图生3D → 打印格式。使用「图生图」卡片里选的主图生成 STL（没选会提示）。</p>
+    <textarea class="input-box" id="desc" placeholder="例如：银发红瞳双马尾少女，水手服，全身立绘">银发红瞳双马尾少女，水手服，全身立绘</textarea>
+    <div class="chips">
+      <span class="chip" onclick="fillDesc('银发红瞳双马尾少女，水手服，全身立绘')">银发双马尾</span>
+      <span class="chip" onclick="fillDesc('粉色长发猫耳少女，女仆装，可爱表情')">粉发猫耳女仆</span>
+      <span class="chip" onclick="fillDesc('金色卷发精灵少女，白色连衣裙，花环头饰')">金发精灵</span>
+      <span class="chip" onclick="fillDesc('黑色短发哥特少女，黑色连衣裙，蕾丝头饰')">黑发哥特</span>
     </div>
-    <button class="service-btn" id="banner-btn" onclick="startComfyUI()" style="display:none">一键启动</button>
-  </div>
-
-  <!-- 子状态 -->
-  <div class="status-bar">
-    <div class="status-item">
-      <div class="dot" id="dot-comfy"></div>
-      <span>ComfyUI</span> <strong id="st-comfy">检测中</strong>
-    </div>
-    <div class="status-item">
-      <div class="dot" id="dot-ollama"></div>
-      <span>大脑</span> <strong id="st-ollama">检测中</strong>
-    </div>
-    <div class="status-item">
-      <div class="dot ok"></div>
-      <span>GPU</span> <strong>RTX 4090 24GB</strong>
-    </div>
-    <div class="status-item">
-      <div class="dot ok"></div>
-      <span>精度</span> <strong>锐边 0.07%</strong>
-    </div>
-  </div>
-
-  <!-- ★ 功能区：所有操作集中在这里 -->
-  <div class="feature-grid">
-
-    <!-- 卡片1：全自动生成 -->
-    <div class="feature-card">
-      <h3>🚀 全自动生成手办</h3>
-      <p>一键生成支持中文；只出图和图生图请使用英文提示词</p>
-      <textarea class="input-box" id="desc" placeholder="例如：银发红瞳双马尾少女，水手服，全身立绘">银发红瞳双马尾少女，水手服，全身立绘</textarea>
-      <div class="chips">
-        <span class="chip" onclick="fillDesc('银发红瞳双马尾少女，水手服，全身立绘')">银发双马尾</span>
-        <span class="chip" onclick="fillDesc('粉色长发猫耳少女，女仆装，可爱表情')">粉发猫耳女仆</span>
-        <span class="chip" onclick="fillDesc('金色卷发精灵少女，白色连衣裙，花环头饰')">金发精灵</span>
-        <span class="chip" onclick="fillDesc('黑色短发哥特少女，黑色连衣裙，蕾丝头饰')">黑发哥特</span>
+    <div class="param-row">
+      <div><label>成品高度(mm)</label><input type="number" id="height" value="150" min="10" max="500"></div>
+      <div><label>底座(%高度)</label><input type="number" id="base" value="3" min="0" max="15"></div>
+      <div><label>抽壳(%对角线)</label><input type="number" id="hollow" value="0" min="0" max="10"></div>
+      <div><label>3D 精度（本地）</label>
+        <select id="octree-res">
+          <option value="256">标准（快，粗）</option>
+          <option value="384">兼容旧版（较快）</option>
+          <option value="512" selected>高精度（默认，保留发束/衣褶）</option>
+        </select>
       </div>
-      <div class="param-row">
-        <div><label>成品高度(mm)</label><input type="number" id="height" value="150" min="10" max="500"></div>
-        <div><label>底座(%高度)</label><input type="number" id="base" value="3" min="0" max="15"></div>
-        <div><label>抽壳(%对角线)</label><input type="number" id="hollow" value="0" min="0" max="10"></div>
+      <div><label>3D 引擎</label>
+        <select id="engine3d" onchange="onEngineChange()">
+          <option value="hunyuan" selected>本地 Hunyuan（免费）</option>
+          <option value="meshy-mv">Meshy 多视图（推荐：侧/背细节）</option>
+          <option value="meshy">Meshy 云（单图高精度）</option>
+          <option value="auto">自动（本地失败回退云）</option>
+        </select>
+      </div>
+      <div id="meshy-geometry-wrap" style="display:none"><label>Meshy 几何</label>
+        <select id="meshy-geometry">
+          <option value="standard" selected>标准（20 积分/次）</option>
+          <option value="2k">Ultra 2K（+5 积分）</option>
+          <option value="4k">Ultra 4K（+5 积分，最细）</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex-row" id="meshy-options">
+      <label style="display:flex;align-items:center;gap:6px;margin:0">
+        <input type="checkbox" id="meshy-desens"> ☁️ 敏感内容模式：上传前最小脱敏 → Meshy 生成 → 本地还原敏感贴图
+      </label>
+    </div>
+    <div class="flex-row" id="meshy-balance-row">
+      <span class="hint" style="margin:0">Meshy 余额：<strong id="meshy-balance">—</strong> 积分</span>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="loadMeshyBalance()">刷新余额</button>
+      <span class="hint" style="margin:0">当前 Key：<strong id="meshy-key-masked">—</strong></span>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="toggleMeshyKey()">🔑 填写/更换 API Key</button>
+    </div>
+    <div id="meshy-key-panel" style="display:none;background:#141722;border:1px solid var(--border);border-radius:8px;padding:8px;margin:0 0 6px">
+      <div class="hint" style="margin:0 0 4px">换新号时把 Meshy 控制台生成的 key 粘到这里保存即可（写入 meshy_config.json，页面不回显明文）。</div>
+      <input class="input-box" type="password" id="meshy-key-input" placeholder="msy_...">
+      <div class="btn-row">
+        <button class="btn btn-primary btn-sm" type="button" onclick="saveMeshyKey()">保存并测试</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="testMeshyKey()">测试连接</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="clearMeshyKey()">清除 Key</button>
+      </div>
+      <div id="meshy-key-status" class="hint" style="margin:0"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-pink btn-sm" type="button" onclick="runMeshySTL()">☁️ 一键 Meshy 云端生成 STL（先脱敏过审）</button>
+    </div>
+    <div class="hint" id="engine-hint" style="margin:2px 0 6px">
+      云端模式：本地抠图 → 最小脱敏过审 → Meshy 生成 3D（约 20 积分/次）→ 本地还原敏感贴图 → 自动水密化 → STL。
+    </div>
+    <div class="flex-row">
+      <span>参考图（图生图主图）：</span><span id="auto-ref-label" style="color:#bbb">未选择</span>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="selectI2IImage()">📂 选择</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runAuto()">🚀 参考图生成 STL</button>
+      <button class="btn btn-ghost btn-sm" onclick="runImg()">🎨 只出图</button>
+      <button class="btn btn-ghost btn-sm" onclick="runModel()">🧊 只图生3D</button>
+      <button class="btn btn-ghost btn-sm" onclick="runPrint()">🖨️ 只转打印</button>
+    </div>
+    <div id="job-status" style="margin-top:6px;color:#aaa;font-size:11.5px">选择功能后将执行真实任务</div>
+    <div class="progress"><div class="progress-fill" id="prog"></div></div>
+  </section>
+
+  <!-- ============ 卡片：图生图 ============ -->
+  <section class="feature-card" id="card-i2i">
+    <h3>🖼️ 图生图 <span class="tag">主图 + 最多 2 张参考图</span></h3>
+    <p>主图决定姿势/构图。参考图给 Qwen 看人物、服装、配色细节（模型原生最多 3 张图）。</p>
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="selectI2IImage()">📂 选择主图</button>
+      <span id="i2i-image-label" style="color:#aaa">尚未选择图片</span>
+    </div>
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addRefs('i2i')">➕ 添加参考图（可多选）</button>
+      <span id="i2i-ref-hint" class="hint" style="margin:0">可选</span>
+    </div>
+    <div id="i2i-ref-list" class="ref-list"></div>
+    <label for="i2i-prompt">自然语言描述 / 英文提示词</label>
+    <textarea class="input-box" id="i2i-prompt" placeholder="用自然语言描述想要的画面，或英文标签；可先点“优化提示词”"></textarea>
+    <div class="btn-row" style="margin-top:4px">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="optimizeI2I()">✨ 优化提示词</button>
+      <label style="display:flex;align-items:center;gap:5px;margin:0"><input type="checkbox" id="i2i-auto" onchange="onAutoCaptionChange()"> 参考图自动识图</label>
+    </div>
+    <div id="i2i-intent" class="intent"></div>
+    <div id="i2i-caption-status" class="hint">可手动输入；勾选自动识图会调用本地视觉模型。</div>
+    <div class="param-row">
+      <div><label for="i2i-engine">编辑流程</label>
+        <select id="i2i-engine" onchange="onI2IEngineChange()">
+          <option value="pony">Pony + 可选轮廓约束</option>
+          <option value="qwen">Qwen 2509（支持参考图，较慢）</option>
+        </select>
+      </div>
+      <div><label for="i2i-style">目标风格</label>
+        <select id="i2i-style">
+          <option value="original">保留原画风</option>
+          <option value="figure_render">手办渲染（实验性）</option>
+          <option value="figure_photo">手办实拍（实验性）</option>
+        </select>
+      </div>
+    </div>
+    <label for="i2i-strength">重绘强度：<span id="i2i-strength-value">0.30</span>（越低越接近原图；仅 Pony 流程）</label>
+    <input type="range" id="i2i-strength" min="0.05" max="0.90" step="0.05" value="0.30" oninput="document.getElementById('i2i-strength-value').textContent=Number(this.value).toFixed(2)" style="width:100%;margin-bottom:4px">
+    <div class="flex-row" style="margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:5px;margin:0"><input type="checkbox" id="i2i-canny" checked> 参考图轮廓约束（SDXL Canny）</label>
+    </div>
+    <div style="background:#202a37;border:1px solid #4578af;border-radius:8px;padding:7px 10px;margin:4px 0 6px">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:600;color:#e6efff"><span>Qwen 模型权重</span><span id="qwen-percent">--</span></div>
+      <div style="height:7px;background:#101827;border-radius:6px;overflow:hidden;margin:5px 0"><div id="qwen-download-fill" style="height:100%;width:0%;background:#48a5ff;transition:width .4s"></div></div>
+      <div id="qwen-weight-status" style="font-size:10.5px;color:#d1deef">正在检查 Qwen 权重……</div>
+    </div>
+    <div class="btn-row"><button class="btn btn-primary" onclick="runI2I()">🖼️ 图生图</button></div>
+    <p style="margin:0">Pony 流程：英文标签、轮廓约束；Qwen 流程：中文/英文自然语言都行、参考图生效。</p>
+  </section>
+
+  <!-- ============ 卡片：多视图测试图 ============ -->
+  <section class="feature-card" id="card-multiview">
+    <h3>📐 多视图测试图 <span class="tag">8 方位 · 单张/多选重生成</span></h3>
+    <p>用主图生成 前/后/左/右 + 4 个斜侧位测试图。每张可单独生成、单独提要求；勾选多张可一键批量重生成。</p>
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="mvPickMain()">📂 选择主图</button>
+      <span id="mv-main-label" style="color:#aaa;overflow-wrap:anywhere">尚未选择</span>
+    </div>
+    <div class="param-row" style="margin-bottom:4px">
+      <div><label>多视图方式</label>
+        <select id="mv-mode" onchange="onMvModeChange()">
+          <option value="mv3d" selected>🧊 3D 定格 + 上色（姿势完全不变，推荐）</option>
+          <option value="qwen">🖼️ 纯 AI 重绘（快，但可能改姿势/设定）</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row" id="mv-build-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="mvBuildModel()">🧊 ① 生成 3D 粗模（约 30~60 秒）</button>
+      <select id="mv-build-engine" style="background:#0a0b0f;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;padding:3px 6px">
+        <option value="hunyuan" selected>本地 Hunyuan（免费·灰模）</option>
+        <option value="meshy">Meshy 带贴图（≈30 积分·彩色）</option>
+      </select>
+    </div>
+    <label for="mv-prompt">整体要求（自然语言，可选）</label>
+    <textarea class="input-box" id="mv-prompt" placeholder="例如：手办实拍风格、干净白底、同一姿势与服装、柔和棚拍光"></textarea>
+    <div class="flex-row" style="margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:6px;margin:0">
+        <input type="checkbox" id="mv-use-refs" checked> 用已生成的其它视图做一致性参考（最多 2 张）
+      </label>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="mvRunSelected()">🔁 重新生成选中（<span id="mv-sel-count">0</span>）</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="mvSelectAll()">全选</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="mvClearSel()">清空选择</button>
+    </div>
+    <div id="mv-grid" class="mv-grid"></div>
+    <div id="mv-status" class="hint" style="margin-top:4px">3D 模式：先点「① 生成 3D 粗模」，然后每张图都有自己的「📸 渲染」按钮（几秒一张）；勾选多张可批量渲染。渲染的是同一个 3D 模型，所以姿势/道具完全不变。</div>
+  </section>
+
+  <!-- ============ 卡片：模型文件修改 ============ -->
+  <section class="feature-card" id="card-modeledit">
+    <h3>🧩 模型文件修改 <span class="tag">导入 GLB/OBJ/STL/3MF/PLY</span></h3>
+    <p>导入你自己的 3D 模型文件，用自然语言直接修改模型：外观/贴图修改（快）或几何重建（Meshy，约 20 积分）。</p>
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="pickModelFile()">📂 导入模型文件</button>
+      <span id="model-path" style="color:#aaa;overflow-wrap:anywhere">尚未选择</span>
+    </div>
+    <div id="model-info" class="hint">—</div>
+    <label for="model-instruction">修改要求（自然语言）</label>
+    <textarea class="input-box" id="model-instruction" placeholder="例如：把泳圈改成红色；去掉背后的支架"></textarea>
+    <div class="param-row" style="margin-bottom:4px">
+      <div><label>修改方式</label>
+        <select id="model-edit-mode">
+          <option value="texture" selected>外观/贴图修改（快，推荐）</option>
+          <option value="rebuild">几何重建（Meshy，约 20 积分）</option>
+        </select>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:11px;color:var(--dim)">
+      <input type="checkbox" id="model-meshy-desens"> 敏感内容：上传 Meshy 前先脱敏（仅几何重建）
+    </label>
+    <div class="btn-row">
+      <button class="btn btn-primary btn-sm" type="button" onclick="runModelEdit()">✏️ 开始修改模型</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="renderModelViews()">📸 渲染 8 方位</button>
+      <button class="btn btn-ghost btn-sm" type="button" onclick="modelToPrint()">🖨️ 转 STL</button>
+    </div>
+    <div id="model-edit-status" class="hint" style="margin-top:4px">外观修改：渲染正面 → AI 按文字改图 → 贴图投影回模型；几何重建：渲染 → AI 改图 → Meshy 重建（结果为新模型）。</div>
+    <img id="model-preview" class="result-img" alt="模型修改预览">
+    <div id="model-result-path" class="result-path"></div>
+  </section>
+
+  <!-- ============ 卡片：修改已有图片 ============ -->
+  <section class="feature-card" id="card-edit">
+    <h3>✏️ 修改已有图片 <span class="tag">涂抹局部重绘</span></h3>
+    <p>选图 → 涂抹要改的区域 → Qwen 重绘。去除骨骼/绑定标记时优先用“保真清理”：未涂区域会保持原始像素。</p>
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="pickEditImage()">📂 选择要修改的图片</button>
+      <span id="edit-image-label" style="color:#aaa;overflow-wrap:anywhere">尚未选择图片</span>
+    </div>
+    <div class="flex-row" style="margin-top:2px">
+      <label style="display:flex;align-items:center;gap:6px;margin:0"><input type="checkbox" id="edit-use-mask" onchange="toggleEditMask()"> 启用涂抹区域</label>
+    </div>
+    <div id="edit-mask-tools" style="display:none;margin-top:4px">
+      <p class="hint" style="margin-top:0">只涂要去掉的标记及其极窄边缘，不要把脚趾、线稿或大块皮肤也涂进去。“保真清理”会保留未涂区域，并避免把细节抹成马赛克。Ctrl+Z 撤销，Ctrl+Y 重做。</p>
+      <div class="param-row" style="margin-bottom:6px">
+        <div><label>处理方式</label>
+          <select id="edit-mask-method" onchange="updateEditMethodHint()">
+            <option value="remove" selected>去除标记（保真清理，推荐）</option>
+            <option value="local">局部重绘（普通：只替换涂抹区域）</option>
+            <option value="whole">整图重生成（真正重画全图，忽略涂抹）</option>
+          </select>
+        </div>
+        <div><label>生成速度 / 细节</label>
+          <select id="edit-qwen-steps">
+            <option value="12">快速 · 12 步</option>
+            <option value="16" selected>平衡 · 16 步</option>
+            <option value="20">精修 · 20 步（较慢）</option>
+          </select>
+        </div>
+      </div>
+      <p id="edit-method-hint" class="hint" style="margin:0 0 6px">保真清理：完整画面保持不动，只以高清局部重绘替换涂抹标记；适合脚趾、手指和线稿附近。</p>
+      <div class="mask-toolbar">
+        <label>画笔 <input type="range" id="edit-brush" min="2" max="150" value="30" oninput="document.getElementById('edit-brush-value').textContent=this.value"> <span id="edit-brush-value">30</span></label>
+        <label>颜色 <input type="color" id="edit-brush-color" value="#ff3030" oninput="redrawEditMask()"></label>
+        <label>透明度 <input type="range" id="edit-brush-opacity" min="10" max="100" value="35" oninput="document.getElementById('edit-opacity-value').textContent=this.value+'%';redrawEditMask()"> <span id="edit-opacity-value">35%</span></label>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="runAuto()">🚀 一键生成</button>
-        <button class="btn btn-ghost btn-sm" onclick="runImg()">🎨 只出图</button>
-        <button class="btn btn-ghost btn-sm" onclick="runI2I()">🖼️ 图生图</button>
-        <button class="btn btn-ghost btn-sm" onclick="runModel()">🧊 只图生3D</button>
-        <button class="btn btn-ghost btn-sm" onclick="runPrint()">🖨️ 只转打印</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="undoEditMask()">↶ 撤销</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="redoEditMask()">↷ 重做</button>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="clearEditMask()">清空涂抹</button>
       </div>
-      <div id="job-status" style="margin-top:12px;color:#aaa">选择功能后将执行真实任务</div><div class="progress"><div class="progress-fill" id="prog"></div></div>
+      <div class="mask-wrap">
+        <img id="edit-preview" alt="待编辑图片">
+        <canvas id="edit-mask-canvas"></canvas>
+      </div>
     </div>
+    <div class="flex-row" style="margin-top:8px">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="addRefs('edit')">➕ 添加参考图（可多选）</button>
+      <span id="edit-ref-hint" class="hint" style="margin:0">主图之外可选参考图</span>
+    </div>
+    <div id="edit-ref-list" class="ref-list"></div>
+    <label for="edit-request">修改要求（自然语言，直接说你的意图）</label>
+    <textarea class="input-box" id="edit-request" placeholder="例如：去掉底座上多余的散落麻绳，重建透明底座和自然阴影，其他保持不变"></textarea>
+    <div class="param-row" style="margin-bottom:4px">
+      <div><label>同时生成方案数</label>
+        <select id="edit-candidates">
+          <option value="1" selected>1 个（快）</option>
+          <option value="2">2 个（不同 cfg/措辞，可选）</option>
+          <option value="3">3 个（更慢）</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="optimizeEdit()">✨ 优化修改要求</button>
+      <button class="btn btn-primary btn-sm" type="button" onclick="runEditImage()">✏️ 开始修改图片</button>
+    </div>
+    <div id="edit-intent" class="intent"></div>
+    <div id="edit-status" class="hint" style="margin-top:4px">优化为可选步骤；提交时会把“优化后的提示词 + 你的原始意图”一起交给模型。</div>
+    <img id="edit-result" class="result-img" alt="修改结果预览">
+    <div id="edit-result-path" class="result-path"></div>
+    <div id="edit-candidate-status" class="hint" style="margin-top:4px"></div>
+    <div id="edit-candidate-gallery" class="cand-grid"></div>
+    <details id="edit-completion">
+      <summary>🖌️ 扩图、人体打点与发束引导（展开）</summary>
+      <div id="completion-inline"><!-- COMPLETION_INLINE --></div>
+    </details>
+  </section>
 
-    <!-- 卡片2：去敏感化 -->
-    <div class="feature-card">
-      <h3>🛡️ 去敏感化</h3>
-      <p>此功能尚未接入，请勿使用。</p>
-      <input class="input-box" type="text" id="desen-input" placeholder="图片路径，如 C:\图片.png">
-      <div class="param-row">
+  <!-- ============ 卡片：去敏感化 ============ -->
+  <section class="feature-card" id="card-desen">
+    <h3>🛡️ 去敏感化 / 还原3D</h3>
+    <p>自动遮挡高风险区域，结果存到出图目录。还原3D只把参考图正面投影到模型，侧面和背面会拉伸。</p>
+    <input class="input-box" type="text" id="desen-input" placeholder="图片路径，如 E:\AI\ComfyUI\output\xxx.png">
+    <div class="flex-row">
+      <button class="btn btn-ghost btn-sm" type="button" onclick="pickDesensitizeImage()">📂 选择图片</button>
+      <div class="param-row" style="margin:0;flex:1;min-width:130px">
         <div><label>遮挡强度</label>
           <select id="desen-strength">
             <option value="auto">auto（自动检测）</option>
@@ -277,73 +565,71 @@ textarea.input-box { min-height: 50px; resize: vertical; }
           </select>
         </div>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-pink" disabled title="功能尚未接入">🛡️ 去敏感化</button>
-        <button class="btn btn-ghost btn-sm" disabled title="功能尚未接入">🔄 还原3D</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-pink btn-sm" onclick="runDesensitize()">🛡️ 去敏感化</button>
+      <button class="btn btn-ghost btn-sm" onclick="runRestore()">🔄 还原3D（正面纹理投影）</button>
+    </div>
+  </section>
+
+  <!-- ============ 卡片：文件与工具 ============ -->
+  <section class="feature-card" id="card-tools">
+    <h3>📁 文件 & 环境</h3>
+    <p>打开目录、命令行、环境自检、命令参考。</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="openDir('output')">📂 出图/3D输出</button>
+      <button class="btn btn-ghost btn-sm" onclick="openDir('print')">📂 打印成品</button>
+      <button class="btn btn-ghost btn-sm" onclick="openDir('project')">📂 项目目录</button>
+      <button class="btn btn-ghost btn-sm" onclick="openCmd()">⌨️ 命令行</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="checkEnv()">🔍 重新检测</button>
+      <button class="btn btn-ghost btn-sm" onclick="runDoctor()">🩺 环境自检</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleHelp()">📖 命令参考</button>
+    </div>
+    <div class="help" id="help-section" style="display:none">
+      <strong>⚙️ 命令行参考：</strong><br>
+      <code>python fig.py auto "描述"</code> — 全自动<br>
+      <code>python fig.py i2i "参考图.png" "提示词" --engine qwen --refs a.png b.png</code> — 图生图（带参考图）<br>
+      <code>python fig.py edit_image "图.png" "要求" --method local --mask m.png --refs a.png</code> — 局部重绘<br>
+      <code>python fig.py model 图.png --remesh-res 512 --smooth-iters 3 --faces 0</code> — 高精度 3D<br>
+      <code>python fig.py print 模型.glb --model-height 150 --base 0.05 --hollow 0.04</code> — 打印格式<br>
+      <code>python fig.py doctor</code> — 环境自检<br><br>
+      <strong>📦 输出位置：</strong> 出图 + 3D：<code>E:\AI\ComfyUI\output\</code> · 打印成品：<code>I:\AI\最终成品\</code>
+    </div>
+  </section>
+
+  <!-- ============ 卡片：最近输出 ============ -->
+  <section class="feature-card" id="card-recent">
+    <h3>🖼️ 最近输出
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="loadRecentOutputs(true)">刷新</button>
+    </h3>
+    <p>最新出图 / 3D 预览，点缩略图放大查看；文件都在 <code>E:\AI\ComfyUI\output</code>。</p>
+    <div id="recent-grid" class="recent-grid"></div>
+    <div id="recent-empty" class="hint">还没有输出文件。</div>
+  </section>
+
+  <!-- ============ 卡片：终端 ============ -->
+  <section class="feature-card" id="card-log" style="padding:10px">
+    <div class="terminal">
+      <div class="terminal-header">
+        <div class="terminal-dot" style="background:#ef4444"></div>
+        <div class="terminal-dot" style="background:#fb923c"></div>
+        <div class="terminal-dot" style="background:#4ade80"></div>
+        <span>本地终端 · 实时输出</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearTerm()">清空</button>
       </div>
+      <div class="terminal-body" id="term"><span class="info">[系统]</span> 控制中心已加载。<br></div>
     </div>
+  </section>
 
-    <!-- 卡片3：文件 & 工具 -->
-    <div class="feature-card">
-      <h3>📁 文件 & 工具</h3>
-      <p>打开输出目录、查看成品、打开命令行</p>
-      <div class="btn-row">
-        <button class="btn btn-ghost btn-sm" onclick="openDir('output')">📂 出图/3D输出</button>
-        <button class="btn btn-ghost btn-sm" onclick="openDir('print')">📂 打印成品</button>
-        <button class="btn btn-ghost btn-sm" onclick="openDir('project')">📂 项目目录</button>
-        <button class="btn btn-ghost btn-sm" disabled title="请从项目目录打开命令行">⌨️ 命令行</button>
-      </div>
-    </div>
+</main>
 
-    <!-- 卡片4：环境 & 帮助 -->
-    <div class="feature-card">
-      <h3>🔍 环境 & 帮助</h3>
-      <p>检测服务状态、查看命令行参数、环境自检</p>
-      <div class="btn-row">
-        <button class="btn btn-ghost btn-sm" onclick="checkEnv()">🔍 重新检测</button>
-        <button class="btn btn-ghost btn-sm" onclick="runDoctor()">🩺 环境自检</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleHelp()">📖 命令参考</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- 终端 -->
-  <div class="terminal">
-    <div class="terminal-header">
-      <div class="terminal-dot" style="background:#ef4444"></div>
-      <div class="terminal-dot" style="background:#fb923c"></div>
-      <div class="terminal-dot" style="background:#4ade80"></div>
-      <span>本地终端 · 实时输出</span>
-      <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearTerm()">清空</button>
-    </div>
-    <div class="terminal-body" id="term">
-      <span class="info">[系统]</span> 控制中心已加载。<br>
-    </div>
-  </div>
-
-  <!-- 命令参考（折叠） -->
-  <div class="help collapsible" id="help-section" onclick="toggleHelpSection(event)" style="display:none">
-    <strong>⚙️ 命令行参考：</strong><br>
-    <code>python fig.py auto "描述"</code> — 全自动<br>
-    <code>python fig.py img "1girl, silver hair" --model pony</code> — 仅出图<br>
-    <code>python fig.py i2i "参考图.png" "1girl, swimsuit" --strength 0.7</code> — 图生图（img2img）<br>
-    <code>python fig.py model 图.png --remesh-res 512 --smooth-iters 3 --faces 0</code> — 高精度 3D<br>
-    <code>python fig.py print 模型.glb --model-height 150 --base 0.05 --hollow 0.04</code> — 打印格式<br>
-    <code>python fig.py desensitize "图.png" --strength auto</code> — 去敏感化<br>
-    <code>python fig.py restore "模型.glb" --original "原图.png"</code> — 还原<br>
-    <code>python fig.py doctor</code> — 环境自检<br><br>
-    <strong>📦 输出位置：</strong><br>
-    • 出图 + 3D：<code>E:\AI\ComfyUI\output\</code>（SSD）<br>
-    • 打印成品：<code>I:\AI\最终成品\</code>（HDD）
-  </div>
-
+<div id="preview-modal" onclick="if(event.target===this)closePreview()">
+  <img id="preview-modal-img" alt="预览">
 </div>
 
-<div class="footer">
-  手办 AI 控制中心 · ComfyUI + Hunyuan3D + Pony + Ollama<br>
-  E:\AI (SSD) · 模型 31.56GB · 全程离线
-</div>
+<div class="footer">手办 AI 控制中心 · ComfyUI + Hunyuan3D + Qwen-Image-Edit + Ollama · 全程离线</div>
 
 <script>
 const TERM = document.getElementById('term');
@@ -374,14 +660,23 @@ async function callApi(path, data) {
 function safeLog(text) {
   const d = document.createElement('div'); d.textContent = text; TERM.appendChild(d); TERM.scrollTop = TERM.scrollHeight;
 }
+
 async function checkService() {
   try {
     const state = await callApi('/api/status');
     const ready = !!state.comfy;
+    const qwenStatus = document.getElementById('qwen-weight-status');
+    if (state.qwen_weights) {
+      const q = state.qwen_weights;
+      const percent = Math.max(0, Math.min(100, q.downloaded / q.total * 100));
+      document.getElementById('qwen-percent').textContent = percent.toFixed(1) + '%';
+      document.getElementById('qwen-download-fill').style.width = percent + '%';
+      qwenStatus.textContent = q.ready ? '权重已安装，可尝试生成。' : `已下载 ${(q.downloaded/1e9).toFixed(2)} / ${(q.total/1e9).toFixed(2)} GB。校验完成后才能使用。`;
+    } else qwenStatus.textContent = '当前为旧版控制服务，请重新打开新版控制中心。';
     document.getElementById('banner').className = 'service-banner ' + (ready ? 'running' : 'stopped');
     document.getElementById('banner-icon').textContent = ready ? '✅' : '❌';
     document.getElementById('banner-title').textContent = ready ? 'ComfyUI 运行中' : 'ComfyUI 未启动';
-    document.getElementById('banner-desc').textContent = ready ? `v${state.comfy.system.comfyui_version} · ${state.comfy.devices?.[0]?.name || ''}` : '请关闭页面后双击桌面「手办AI」重新启动';
+    document.getElementById('banner-desc').textContent = ready ? `v${state.comfy.system.comfyui_version} · ${state.comfy.devices?.[0]?.name || ''}` : '请关闭页面后双击「手办AI」重新启动';
     const btn=document.getElementById('banner-btn'); btn.style.display=ready ? 'block':'none'; btn.textContent='打开 ComfyUI'; btn.onclick=()=>window.open('http://127.0.0.1:8188/','_blank');
     document.getElementById('dot-comfy').className='dot '+(ready?'ok':'err');
     document.getElementById('st-comfy').textContent=ready?'运行中':'未启动';
@@ -390,10 +685,166 @@ async function checkService() {
     if (state.output !== undefined && state.output !== previousOutput) {
       TERM.textContent = state.output; TERM.scrollTop=TERM.scrollHeight; previousOutput=state.output;
     }
+    if (state.mode === 'edit_image') {
+      const editStatus = document.getElementById('edit-status');
+      const resultImg = document.getElementById('edit-result');
+      if (state.running) editStatus.textContent = 'Qwen 正在修改，结果会保存到出图/3D输出。';
+      else if (state.exit_code === 0) {
+        editStatus.textContent = '已生成结果，请检查下方预览（原图不会被覆盖）。';
+        const lines = (state.output || '').split(/\r?\n/).filter(line => line.includes('编辑结果'));
+        const line = lines[lines.length - 1] || '';
+        const mark = line.lastIndexOf('编辑结果');
+        const resultPath = mark >= 0 ? line.slice(mark).replace(/^编辑结果[:：]\s*/, '').trim() : '';
+        if (resultPath && resultImg.dataset.path !== resultPath) {
+          resultImg.dataset.path = resultPath;
+          document.getElementById('edit-result-path').textContent = resultPath;
+          callApi('/api/edit_preview', {path: resultPath}).then(result => {
+            resultImg.src = result.image; resultImg.style.display = 'block';
+          }).catch(() => {});
+        }
+        // 解析多方案候选
+        const candLines = (state.output || '').split(/\r?\n/).filter(l => l.includes('[候选 '));
+        if (candLines.length && (state.output || '').length !== window.__editCandLen) {
+          window.__editCandLen = (state.output || '').length;
+          const grid = document.getElementById('edit-candidate-gallery');
+          grid.innerHTML = '';
+          let n = 0;
+          for (const line of candLines) {
+            const m = /\[候选\s*(\d+)\]\s*seed=(\d+)\s+(.+)$/.exec(line.trim());
+            if (!m) continue;
+            const idx = m[1], seed = m[2], candPath = m[3].trim();
+            if (!candPath) continue;
+            const item = document.createElement('div');
+            item.className = 'cand-item';
+            item.title = '点击查看：' + candPath;
+            const im = document.createElement('img');
+            callApi('/api/edit_preview', {path: candPath}).then(r => { im.src = r.image; }).catch(() => {});
+            const cap = document.createElement('span');
+            cap.textContent = `方案 ${idx}（seed ${seed}）`;
+            item.append(im, cap);
+            item.onclick = () => { showPreview(candPath); };
+            grid.appendChild(item);
+            n++;
+          }
+          if (n) document.getElementById('edit-candidate-status').textContent = `已生成 ${n + 1} 个方案（含结果图），点缩略图看大图；满意的那张可到输出目录取。`;
+        } else if (!candLines.length && (state.output || '').length !== window.__editCandLen) {
+          window.__editCandLen = (state.output || '').length;
+          document.getElementById('edit-candidate-gallery').innerHTML = '';
+          document.getElementById('edit-candidate-status').textContent = '';
+        }
+      }
+      else if (state.exit_code !== null) editStatus.textContent = '修改失败，请查看日志。';
+    }
+    if (state.mode === 'mv3d_build') {
+      const out = state.output || '';
+      if (state.running) { mvStatus('正在生成 3D 粗模……'); }
+      else if (out.length !== mvLastOutLen) {
+        mvLastOutLen = out.length;
+        const m = /粗模[:：]\s*(.+)$/m.exec(out);
+        mvClayBusy = false;
+        if (state.exit_code === 0 && m) {
+          mvGlb = m[1].trim();
+          mvStatus('3D 粗模就绪！现在可以逐张点「📸 渲染」（几秒一张），或勾选多张批量渲染。');
+        } else if (state.exit_code === 0) {
+          mvStatus('粗模完成但没解析到路径，请查看日志。');
+        } else { mvStatus('建粗模失败，请查看日志。'); }
+        mvRender();
+      }
+    }
+    if (state.mode === 'mv3d_render') {
+      const out = state.output || '';
+      if (state.running) { mvStatus('正在渲染多视图……'); }
+      else if (out.length !== mvLastOutLen) {
+        mvLastOutLen = out.length;
+        const lines = out.split(/\r?\n/).filter(l => l.includes('多视图结果'));
+        let got = 0;
+        for (const line of lines) {
+          const mark = line.lastIndexOf('多视图结果');
+          const rest = line.slice(mark).replace(/^多视图结果[:：]\s*/, '');
+          const idx = rest.indexOf(':');
+          if (idx > 0) {
+            const view = rest.slice(0, idx).trim(); const path = rest.slice(idx + 1).trim();
+            if (MV_VIEWS.some(v => v.key === view) && path) { mvResults[view] = {path, ts: Date.now(), thumb: ''}; got++; }
+          }
+        }
+        mvBusyView = '';
+        if (state.exit_code === 0) { mvStatus(got ? `渲染完成 ${got} 张（同一 3D 模型，姿势不变）。` : '渲染完成但没有解析到结果，请查看日志。'); mvRender(); }
+        else { mvStatus('渲染失败，请查看日志。'); mvRender(); }
+      }
+    }
+    if (state.mode === 'mv3d_repaint') {
+      const out = state.output || '';
+      if (state.running) { mvStatus('正在给定格图上色（姿势锁定）……'); }
+      else if (out.length !== mvLastOutLen) {
+        mvLastOutLen = out.length;
+        const lines = out.split(/\r?\n/).filter(l => l.includes('多视图结果'));
+        let got = 0;
+        for (const line of lines) {
+          const mark = line.lastIndexOf('多视图结果');
+          const rest = line.slice(mark).replace(/^多视图结果[:：]\s*/, '');
+          const idx = rest.indexOf(':');
+          if (idx > 0) {
+            const view = rest.slice(0, idx).trim(); const path = rest.slice(idx + 1).trim();
+            if (MV_VIEWS.some(v => v.key === view) && path) { mvResults[view] = {path, ts: Date.now(), thumb: ''}; got++; }
+          }
+        }
+        mvBusyView = '';
+        if (state.exit_code === 0) { mvStatus(got ? `上色完成 ${got} 张（姿势与原图一致，角色设定来自原图）。` : '上色完成但没有解析到结果，请查看日志。'); mvRender(); }
+        else { mvStatus('上色失败，请查看日志。'); mvRender(); }
+      }
+    }
+    if (state.mode === 'model_edit') {
+      const out = state.output || '';
+      const statusEl = document.getElementById('model-edit-status');
+      if (state.running) statusEl.textContent = '模型修改中……请等待（外观约 1~3 分钟；几何重建约 2~5 分钟）';
+      else if (state.exit_code === 0) {
+        const m = /模型修改结果[:：]\s*(.+)$/m.exec(out);
+        const pv = /模型修改预览[:：]\s*front[:：]\s*(.+)$/m.exec(out);
+        if (m) {
+          statusEl.textContent = '模型修改完成。';
+          document.getElementById('model-result-path').textContent = m[1].trim();
+        } else statusEl.textContent = '完成但没有解析到结果路径，请查看日志。';
+        if (pv) {
+          const img = document.getElementById('model-preview');
+          callApi('/api/edit_preview', {path: pv[1].trim()}).then(r => {
+            img.src = r.image; img.style.display = 'block';
+          }).catch(() => {});
+        }
+      } else if (state.exit_code !== null) statusEl.textContent = '模型修改失败，请查看日志。';
+    }
+    if (state.mode === 'multiview') {
+      const out = state.output || '';
+      if (state.running) {
+        mvStatus('多视图生成中……（每张约 1~3 分钟）');
+      } else if (out.length !== mvLastOutLen) {
+        mvLastOutLen = out.length;
+        const lines = out.split(/\r?\n/).filter(line => line.includes('多视图结果'));
+        let got = 0;
+        for (const line of lines) {
+          const mark = line.lastIndexOf('多视图结果');
+          const rest = line.slice(mark).replace(/^多视图结果[:：]\s*/, '');
+          const idx = rest.indexOf(':');
+          if (idx > 0) {
+            const view = rest.slice(0, idx).trim();
+            const path = rest.slice(idx + 1).trim();
+            if (MV_VIEWS.some(v => v.key === view) && path) { mvResults[view] = {path, ts: Date.now(), thumb: ''}; got++; }
+          }
+        }
+        mvBusyView = '';
+        if (state.exit_code === 0) {
+          mvStatus(got ? `已完成 ${got} 张；可单张修改/重生成，或勾选多张批量重生成。` : '任务完成但没有解析到结果，请查看日志。');
+          if (got) mvRender(); else mvRender();
+        } else if (state.exit_code !== null) {
+          mvStatus('生成失败，请查看日志。');
+          mvRender();
+        }
+      }
+    }
     if (state.mode && !state.running && state.exit_code !== null) {
-      document.getElementById('job-status').textContent = state.exit_code === 0 ? '任务完成（请检查输出文件）' : `任务失败（退出码 ${state.exit_code}），请查看下方日志`;
+      document.getElementById('job-status').textContent = state.exit_code === 0 ? (state.mode === 'image_print' ? '文件已保存到“打印成品”；请检查3D预览，人物形状可能不完整' : '任务完成（请检查输出文件）') : `任务失败（退出码 ${state.exit_code}），请查看日志`;
       setProg(state.exit_code === 0 ? 100 : 0);
-    } else if(state.running) { document.getElementById('job-status').textContent='任务运行中，详细进度见下方日志'; }
+      if (state.exit_code === 0) loadRecentOutputs(false);
+    } else if(state.running) { document.getElementById('job-status').textContent='任务运行中，详细进度见日志'; }
     return ready;
   } catch(e) {
     document.getElementById('banner').className='service-banner stopped';
@@ -406,44 +857,763 @@ async function checkService() {
 async function checkOllama() {}
 async function startComfyUI() { safeLog('请双击桌面「手办AI」图标启动。'); }
 async function checkEnv() { await checkService(); }
+
+/* ================= 图生图：主图 + 多参考图 ================= */
+let i2iImage = '';
+let i2iRefs = [];
+let editRefs = [];
+let captionRevision = 0;
+let captionBusy = false;
+let captionReady = false;
+
+function basename(path) { return String(path || '').split(/[\\/]/).pop(); }
+
+function renderRefList(which) {
+  const list = which === 'edit' ? editRefs : i2iRefs;
+  const box = document.getElementById(which + '-ref-list');
+  box.innerHTML = '';
+  list.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'ref-chip';
+    const img = document.createElement('img');
+    callApi('/api/edit_preview', {path: p}).then(r => { img.src = r.image; }).catch(() => {});
+    const label = document.createElement('span');
+    label.textContent = (i + 1) + '. ' + basename(p);
+    label.title = p;
+    const del = document.createElement('button');
+    del.textContent = '×'; del.title = '移除';
+    del.onclick = () => { list.splice(i, 1); renderRefList(which); };
+    chip.append(img, label, del);
+    box.appendChild(chip);
+  });
+  const hint = document.getElementById(which + '-ref-hint');
+  if (hint) {
+    if (!list.length) hint.textContent = which === 'edit' ? '主图之外可选参考图（Qwen 最多 2 张）' : '可选；Qwen 流程最多用主图 + 2 张';
+    else if (list.length > 2) hint.textContent = `已选 ${list.length} 张：Qwen-2509 只吃 3 张图，实际只用前 2 张参考图`;
+    else hint.textContent = `已选 ${list.length} 张参考图`;
+  }
+}
+async function addRefs(which) {
+  try {
+    const res = await callApi('/api/pick', {kind: 'image', multiple: true});
+    const paths = (res.paths || []).filter(Boolean);
+    const list = which === 'edit' ? editRefs : i2iRefs;
+    for (const p of paths) if (!list.includes(p)) list.push(p);
+    renderRefList(which);
+  } catch (e) { safeLog('[错误] ' + e.message); }
+}
+
+async function captionI2IImage() {
+  const revision = ++captionRevision;
+  const promptField = document.getElementById('i2i-prompt');
+  const initialPrompt = promptField.value;
+  const status = document.getElementById('i2i-caption-status');
+  captionBusy = true; captionReady = false;
+  status.textContent = '正在使用本地视觉模型识图，请稍候……';
+  try {
+    const result = await callApi('/api/caption', {path:i2iImage});
+    if (revision !== captionRevision || !document.getElementById('i2i-auto').checked) return;
+    if (promptField.value !== initialPrompt) {
+      captionReady = true;
+      status.textContent = '识图期间提示词已被修改，保留手动输入。确认后点击“图生图”。';
+      return;
+    }
+    promptField.value = result.prompt;
+    captionReady = true;
+    status.textContent = '已自动填写。请检查并修改提示词，再点击“图生图”。';
+  } catch (e) {
+    if (revision === captionRevision) status.textContent = '识图失败：' + e.message + '。可取消勾选后手动输入。';
+  } finally {
+    if (revision === captionRevision) captionBusy = false;
+  }
+}
+async function selectI2IImage() {
+  try {
+    const choice = await callApi('/api/pick', {kind:'image'});
+    if (!choice.path) return false;
+    i2iImage = choice.path; ++captionRevision; captionBusy = false; captionReady = false;
+    document.getElementById('i2i-image-label').textContent = i2iImage;
+    document.getElementById('auto-ref-label').textContent = i2iImage;
+    if (document.getElementById('i2i-auto').checked) await captionI2IImage();
+    else document.getElementById('i2i-caption-status').textContent = '图片已选择；请填写提示词。';
+    return true;
+  } catch(e) { document.getElementById('i2i-caption-status').textContent = '选择图片失败：' + e.message; return false; }
+}
+function onI2IEngineChange() {
+  if (document.getElementById('i2i-engine').value === 'qwen' && document.getElementById('i2i-style').value === 'original') {
+    document.getElementById('i2i-style').value = 'figure_photo';
+  }
+}
+function onAutoCaptionChange() {
+  ++captionRevision; captionBusy = false; captionReady = false;
+  if (document.getElementById('i2i-auto').checked) {
+    if (i2iImage) captionI2IImage();
+    else document.getElementById('i2i-caption-status').textContent = '请选择主图，随后会自动识图并填写。';
+  } else document.getElementById('i2i-caption-status').textContent = '自动填写已关闭，可手动输入。';
+}
+
+/* 图生图：提示词优化 + 原始意图 */
+let i2iOriginalPrompt = '';
+async function optimizeI2I() {
+  const field = document.getElementById('i2i-prompt');
+  const status = document.getElementById('i2i-caption-status');
+  const original = field.value.trim();
+  if (!original) { status.textContent = '请先填写提示词。'; return; }
+  if (document.getElementById('i2i-engine').value !== 'qwen') {
+    status.textContent = 'Pony 流程需要英文标签，优化功能只给 Qwen 流程用；请直接写英文 tags。';
+    return;
+  }
+  status.textContent = '正在优化提示词，请稍候……';
+  try {
+    const result = await callApi('/api/optimize_edit', {request: original});
+    if (field.value.trim() !== original) { status.textContent = '输入已更改，保留你的手动修改。'; return; }
+    i2iOriginalPrompt = original;
+    field.value = result.instruction;
+    document.getElementById('i2i-intent').textContent = '原始意图：' + original;
+    status.textContent = '已优化；提交时会把优化后的提示词和你的原始意图一起交给模型。';
+  } catch(e) { status.textContent = '优化失败：' + e.message + '；仍可直接使用原输入。'; }
+}
+
 async function runTask(mode) {
   try {
     let path='';
-    if (['i2i','model','print'].includes(mode)) {
+    if (mode === 'i2i') {
+      if (document.getElementById('i2i-engine').value === 'qwen') {
+        const state = await callApi('/api/status');
+        if (!state.qwen_weights || !state.qwen_weights.ready) throw new Error('Qwen 权重尚未安装完成，请查看 Qwen 模型权重进度');
+      }
+      if (!i2iImage) {
+        if (!await selectI2IImage()) return;
+        if (document.getElementById('i2i-auto').checked) return;
+      }
+      if (captionBusy) throw new Error('正在识图，请等待自动填写完成');
+      if (document.getElementById('i2i-auto').checked && !captionReady) throw new Error('自动识图尚未成功，请重新选择图片或关闭自动填写');
+      path = i2iImage;
+    } else if (['model','print'].includes(mode)) {
       const choice=await callApi('/api/pick',{kind:mode==='print'?'model':'image'});
       path=choice.path; if (!path) return;
     }
-    const data={mode, path, prompt:document.getElementById('desc').value.trim(), height:document.getElementById('height').value, base:document.getElementById('base').value, hollow:document.getElementById('hollow').value};
+    let prompt = document.getElementById(mode === 'i2i' ? 'i2i-prompt' : 'desc').value.trim();
+    if (mode === 'i2i' && i2iOriginalPrompt && prompt !== i2iOriginalPrompt) {
+      prompt = prompt + '\n\n（用户的原始意图：' + i2iOriginalPrompt + '）';
+    }
+    const data = {mode, path, prompt,
+      strength:document.getElementById('i2i-strength').value,
+      style:document.getElementById('i2i-style').value,
+      engine:document.getElementById('i2i-engine').value,
+      structure:(mode === 'i2i' && document.getElementById('i2i-canny').checked ? 'canny' : 'none'),
+      height:document.getElementById('height').value,
+      base:document.getElementById('base').value,
+      hollow:document.getElementById('hollow').value,
+      octree:document.getElementById('octree-res').value,
+      engine3d:document.getElementById('engine3d').value,
+      meshy_geometry:document.getElementById('meshy-geometry').value,
+      meshy_desensitize:document.getElementById('meshy-desens').checked,
+      refs: mode === 'i2i' ? i2iRefs : []};
     await callApi('/api/run',data);
     previousOutput=''; clearTerm(); setProg(5); document.getElementById('job-status').textContent='任务已启动，详细进度见下方日志';
     await checkService();
   } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
 }
-function runAuto(){return runTask('auto')}
+async function runAuto(){
+  try {
+    if (!i2iImage && !await selectI2IImage()) return;
+    const data={mode:'image_print', path:i2iImage, height:document.getElementById('height').value, base:document.getElementById('base').value, hollow:document.getElementById('hollow').value, octree:document.getElementById('octree-res').value, engine3d:document.getElementById('engine3d').value, meshy_geometry:document.getElementById('meshy-geometry').value, meshy_desensitize:document.getElementById('meshy-desens').checked};
+    await callApi('/api/run',data);
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent='正在使用所选主图生成3D，STL 将保存到“打印成品”';
+    await checkService();
+  } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
+}
+async function runMeshySTL(){
+  try {
+    if (!i2iImage && !await selectI2IImage()) return;
+    document.getElementById('engine3d').value = 'meshy'; onEngineChange();
+    document.getElementById('meshy-desens').checked = true;
+    const data = {
+      mode:'image_print', path:i2iImage,
+      height:document.getElementById('height').value,
+      base:document.getElementById('base').value,
+      hollow:document.getElementById('hollow').value,
+      octree:document.getElementById('octree-res').value,
+      engine3d:'meshy',
+      meshy_geometry:document.getElementById('meshy-geometry').value,
+      meshy_desensitize:true
+    };
+    await callApi('/api/run', data);
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent='☁️ Meshy 云端：脱敏过审 → 生成 3D → 还原贴图 → 转 STL，约 2~5 分钟';
+    await checkService();
+  } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
+}
 function runImg(){return runTask('img')}
 function runI2I(){return runTask('i2i')}
 function runModel(){return runTask('model')}
 function runPrint(){return runTask('print')}
 function runDoctor(){return runTask('doctor')}
-async function openDir(folder){try {await callApi('/api/open',{folder});} catch(e) {safeLog('[错误] '+e.message);}}
 
+/* ================= 修改已有图片：涂抹 + 撤销/重做 + 参考图 ================= */
+let editImage = '';
+let editMaskDrawn = false;
+let editPainting = false;
+let editStrokes = [];
+let editHistory = [];   // 撤销栈（快照）
+let editRedo = [];      // 重做栈（快照）
+const EDIT_HISTORY_LIMIT = 120;
+
+function drawEditStrokes(ctx, color, opacity) {
+  ctx.save(); ctx.strokeStyle=color; ctx.fillStyle=color; ctx.globalAlpha=opacity;
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  for(const stroke of editStrokes) {
+    ctx.lineWidth=stroke.width; ctx.beginPath();
+    ctx.moveTo(stroke.points[0][0],stroke.points[0][1]);
+    if(stroke.points.length===1) ctx.lineTo(stroke.points[0][0]+0.01,stroke.points[0][1]);
+    else for(const point of stroke.points.slice(1)) ctx.lineTo(point[0],point[1]);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+function redrawEditMask(){
+  const canvas=document.getElementById('edit-mask-canvas'), ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawEditStrokes(ctx,document.getElementById('edit-brush-color').value,Number(document.getElementById('edit-brush-opacity').value)/100);
+  editMaskDrawn=editStrokes.length>0;
+}
+function snapshotStrokes(){
+  return editStrokes.map(s => ({width:s.width, points:s.points.map(p => [p[0], p[1]])}));
+}
+function restoreStrokes(snapshot){
+  editPainting = false;
+  editStrokes = snapshot;
+  redrawEditMask();
+}
+function pushEditHistory(){
+  editHistory.push(snapshotStrokes());
+  if (editHistory.length > EDIT_HISTORY_LIMIT) editHistory.shift();
+  editRedo.length = 0;
+}
+function undoEditMask(){
+  if (!editHistory.length) return;
+  editRedo.push(snapshotStrokes());
+  restoreStrokes(editHistory.pop());
+}
+function redoEditMask(){
+  if (!editRedo.length) return;
+  editHistory.push(snapshotStrokes());
+  restoreStrokes(editRedo.pop());
+}
+function clearEditMask(){
+  if (!editStrokes.length) return;
+  pushEditHistory();
+  editPainting = false; editStrokes = [];
+  redrawEditMask();
+}
+function resetEditMask(){
+  editPainting = false; editStrokes = []; editHistory = []; editRedo = [];
+  redrawEditMask();
+}
+document.addEventListener('keydown',e=>{
+  const t=e.target;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable;
+  if (typing || e.target.closest?.('#completion-inline') || !document.getElementById('edit-use-mask').checked) return;
+  const undo = e.ctrlKey && !e.shiftKey && !e.altKey && e.key.toLowerCase()==='z';
+  const redo = e.ctrlKey && ((e.shiftKey && e.key.toLowerCase()==='z') || (!e.shiftKey && e.key.toLowerCase()==='y'));
+  if (undo) { e.preventDefault(); undoEditMask(); }
+  else if (redo) { e.preventDefault(); redoEditMask(); }
+});
+function updateEditMethodHint(){
+  const select=document.getElementById('edit-mask-method');
+  const hint=document.getElementById('edit-method-hint');
+  if(!select || !hint)return;
+  const whole=select.value==='whole';
+  if(select.value==='remove') hint.textContent='保真清理：完整画面保持不动，只以高清局部重绘替换涂抹标记；适合脚趾、手指和线稿附近。';
+  else if(whole) hint.textContent='整图重生成：会忽略涂抹区并让模型重画整张画面；只在确实需要整体改风格/构图时使用。';
+  else hint.textContent='普通局部重绘：替换涂抹区域并进行自然过渡；大块改物体时适用。';
+  const canvas=document.getElementById('edit-mask-canvas');
+  if(canvas) { canvas.style.opacity=whole ? '.42' : '1'; canvas.style.pointerEvents=whole ? 'none' : ''; }
+}
+function toggleEditMask(){
+  document.getElementById('edit-mask-tools').style.display=document.getElementById('edit-use-mask').checked?'block':'none';
+  updateEditMethodHint();
+}
+updateEditMethodHint();
+async function pickEditImage() {
+  try {
+    const choice=await callApi('/api/pick',{kind:'image'}); if(!choice.path)return;
+    await loadEditSource(choice.path);
+  } catch(e) {document.getElementById('edit-status').textContent='选择失败：'+e.message;}
+}
+async function loadEditSource(path) {
+    const preview=await callApi('/api/edit_preview',{path});
+    const img=document.getElementById('edit-preview');
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('预览加载失败'));img.src=preview.image;});
+    img.style.display='block';
+    const canvas=document.getElementById('edit-mask-canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+    resetEditMask();editImage=path;document.getElementById('edit-image-label').textContent=path;
+    if(window.CompletionEditor && document.getElementById('edit-completion').open && window.CompletionEditor.getState().source!==path)
+      await window.CompletionEditor.setSource(path);
+}
+document.addEventListener('completion-source-changed',e=>{
+  if(e.detail.path!==editImage)loadEditSource(e.detail.path).catch(err=>document.getElementById('edit-status').textContent=err.message);
+});
+const maskCanvas=document.getElementById('edit-mask-canvas');
+function maskPoint(e){const r=maskCanvas.getBoundingClientRect();return [(e.clientX-r.left)*maskCanvas.width/r.width,(e.clientY-r.top)*maskCanvas.height/r.height];}
+maskCanvas.addEventListener('pointerdown',e=>{
+  if(!editImage || e.button!==0)return;
+  pushEditHistory();
+  editPainting=true;maskCanvas.setPointerCapture(e.pointerId);
+  editStrokes.push({width:Number(document.getElementById('edit-brush').value)*maskCanvas.width/maskCanvas.clientWidth,points:[maskPoint(e)]});
+  redrawEditMask();
+});
+maskCanvas.addEventListener('pointermove',e=>{if(!editPainting)return;editStrokes[editStrokes.length-1].points.push(maskPoint(e));redrawEditMask();});
+maskCanvas.addEventListener('pointerup',()=>{editPainting=false;});
+maskCanvas.addEventListener('pointercancel',()=>{editPainting=false;});
+function exportEditMask(){
+  const out=document.createElement('canvas');out.width=maskCanvas.width;out.height=maskCanvas.height;
+  const ctx=out.getContext('2d');ctx.fillStyle='black';ctx.fillRect(0,0,out.width,out.height);
+  drawEditStrokes(ctx,'white',1);return out.toDataURL('image/png');
+}
+
+/* 修改要求优化 + 原始意图 */
+let editOriginalRequest = '';
+async function optimizeEdit() {
+  const field=document.getElementById('edit-request'); const original=field.value.trim();
+  const status=document.getElementById('edit-status');
+  if(!original){status.textContent='请先输入修改要求。';return;}
+  status.textContent='正在优化要求，请稍候……';
+  try {
+    const result=await callApi('/api/optimize_edit',{request:original});
+    if(field.value.trim()!==original) {status.textContent='输入已更改，保留你的手动修改。';return;}
+    editOriginalRequest = original;
+    field.value=result.instruction;
+    document.getElementById('edit-intent').textContent = '原始意图：' + original;
+    status.textContent='已优化，请检查并修改后再提交。';
+  } catch(e) {status.textContent='优化失败：'+e.message+'；仍可直接使用原要求。';}
+}
+async function runEditImage() {
+  try {
+    if(!editImage){await pickEditImage();if(!editImage)return;}
+    let instruction=document.getElementById('edit-request').value.trim();
+    if(!instruction)throw new Error('请填写修改要求');
+    if(editOriginalRequest && instruction !== editOriginalRequest) {
+      instruction = instruction + '\n\n（用户的原始意图：' + editOriginalRequest + '）';
+    }
+    const useMask=document.getElementById('edit-use-mask').checked;
+    const selectedMethod=useMask ? document.getElementById('edit-mask-method').value : 'ai';
+    const whole=selectedMethod==='whole' || selectedMethod==='ai';
+    if(useMask && !whole && !editMaskDrawn)throw new Error('请先在图片上涂抹需要修改的区域');
+    const method=selectedMethod;
+    const candCount = Number(document.getElementById('edit-candidates').value || 1);
+    await callApi('/api/run',{mode:'edit_image',path:editImage,instruction,method,
+      candidates:candCount,
+      steps:Number(document.getElementById('edit-qwen-steps').value || 16),
+      mask:useMask && !whole ? exportEditMask() : null, refs:editRefs});
+    document.getElementById('edit-candidate-gallery').innerHTML = '';
+    document.getElementById('edit-candidate-status').textContent = candCount > 1 ? '正在生成多个方案……' : '';
+    previousOutput='';clearTerm();setProg(5);
+    const resultImg=document.getElementById('edit-result');
+    resultImg.style.display='none';resultImg.removeAttribute('src');resultImg.dataset.path='';
+    document.getElementById('edit-result-path').textContent='';
+    document.getElementById('edit-status').textContent=whole
+      ? '正在真正整图重生成（不会裁切或混合涂抹区），请等待……'
+      : method==='remove'
+        ? '正在保真清理涂抹标记（原图未涂区域保持不变），请等待……'
+        : '正在局部重绘涂抹区域，请等待……';
+    document.getElementById('job-status').textContent='图片编辑中，详细进度见日志';
+    await checkService();
+  } catch(e){document.getElementById('edit-status').textContent='编辑失败：'+e.message;}
+}
+
+/* ================= 去敏感化 / 还原 / 工具 ================= */
+async function pickDesensitizeImage() {
+  try {
+    const choice = await callApi('/api/pick', {kind: 'image'});
+    if (choice.path) document.getElementById('desen-input').value = choice.path;
+  } catch(e) { safeLog('[错误] '+e.message); }
+}
+async function runDesensitize() {
+  try {
+    const path = document.getElementById('desen-input').value.trim();
+    if (!path) throw new Error('请先选择图片');
+    await callApi('/api/run', {mode:'desensitize', path, strength:document.getElementById('desen-strength').value});
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent='正在处理图片，详细进度见日志';
+    await checkService();
+  } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
+}
+async function runRestore() {
+  try {
+    const model = await callApi('/api/pick', {kind:'model'}); if (!model.path) return;
+    const original = await callApi('/api/pick', {kind:'image'}); if (!original.path) return;
+    await callApi('/api/run', {mode:'restore', path:model.path, original:original.path});
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent='正在投影参考图，详细进度见日志';
+    await checkService();
+  } catch(e) { safeLog('[错误] '+e.message); document.getElementById('job-status').textContent=e.message; }
+}
+async function openCmd(){try {await callApi('/api/command',{});} catch(e) {safeLog('[错误] '+e.message);}}
+async function openDir(folder){try {await callApi('/api/open',{folder});} catch(e) {safeLog('[错误] '+e.message);}}
 function toggleHelp() {
   const el = document.getElementById('help-section');
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-function toggleHelpSection(e) {
-  if (e.target.tagName === 'CODE' || e.target.tagName === 'STRONG') return;
-  const el = document.getElementById('help-section');
-  el.classList.toggle('open');
+/* ================= Meshy API Key 设置 ================= */
+function toggleMeshyKey() {
+  const panel = document.getElementById('meshy-key-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+async function loadMeshyKeyInfo() {
+  try {
+    const r = await callApi('/api/meshy_config');
+    const el = document.getElementById('meshy-key-masked');
+    if (el) el.textContent = r.has_key ? (r.masked + (r.source === 'env' ? '（环境变量）' : '')) : '未配置';
+  } catch (e) { /* 老服务没有该接口 */ }
+}
+async function testMeshyKey() {
+  const status = document.getElementById('meshy-key-status');
+  status.textContent = '正在测试连接…';
+  try {
+    const r = await callApi('/api/meshy_config', {action: 'test'});
+    status.textContent = r.ok ? ('连接正常，剩余 ' + r.balance + ' 积分') : ('连接失败：' + (r.error || '未知错误'));
+  } catch (e) { status.textContent = '测试失败：' + e.message; }
+}
+async function saveMeshyKey() {
+  const input = document.getElementById('meshy-key-input');
+  const status = document.getElementById('meshy-key-status');
+  const key = input.value.trim();
+  if (!key) { status.textContent = '请先粘贴新的 API key'; return; }
+  status.textContent = '正在保存并测试…';
+  try {
+    const r = await callApi('/api/meshy_config', {action: 'save', api_key: key});
+    input.value = '';
+    status.textContent = r.ok ? ('已保存。' + (r.balance !== null && r.balance !== undefined ? '余额 ' + r.balance + ' 积分' : '（余额查询失败，请检查网络）')) : '保存失败';
+    if (r.ok) { await loadMeshyKeyInfo(); await loadMeshyBalance(); }
+  } catch (e) { status.textContent = '保存失败：' + e.message; }
+}
+async function clearMeshyKey() {
+  const status = document.getElementById('meshy-key-status');
+  try {
+    await callApi('/api/meshy_config', {action: 'clear'});
+    status.textContent = '已清除。需要时重新填写。';
+    await loadMeshyKeyInfo();
+    document.getElementById('meshy-balance').textContent = '—';
+  } catch (e) { status.textContent = '清除失败：' + e.message; }
+}
+
+/* ================= 模型文件修改 ================= */
+let modelFile = '';
+function modelStatus(text) { const el = document.getElementById('model-edit-status'); if (el) el.textContent = text; }
+async function pickModelFile() {
+  try {
+    const c = await callApi('/api/pick', {kind: 'model'});
+    if (!c.path) return;
+    modelFile = c.path;
+    document.getElementById('model-path').textContent = modelFile;
+    document.getElementById('model-info').textContent = '正在读取模型信息…';
+    try {
+      const r = await callApi('/api/mesh_info', {path: modelFile});
+      const i = r.info;
+      document.getElementById('model-info').textContent =
+        `面数 ${i.faces.toLocaleString()} · 顶点 ${i.vertices.toLocaleString()} · ` +
+        (i.watertight ? '水密 ✓' : '非水密（打印需水密化）') +
+        ` · 尺寸 ${i.extents.map(x => x.toFixed(2)).join(' × ')} · ${i.size_mb} MB`;
+    } catch (e) { document.getElementById('model-info').textContent = '模型信息读取失败：' + e.message; }
+  } catch (e) { modelStatus('选择失败：' + e.message); }
+}
+async function runModelEdit() {
+  try {
+    if (!modelFile) { await pickModelFile(); if (!modelFile) return; }
+    const instruction = document.getElementById('model-instruction').value.trim();
+    if (!instruction) throw new Error('请填写修改要求');
+    const mode = document.getElementById('model-edit-mode').value;
+    const desens = document.getElementById('model-meshy-desens').checked;
+    const img = document.getElementById('model-preview');
+    img.style.display = 'none'; img.removeAttribute('src');
+    document.getElementById('model-result-path').textContent = '';
+    modelStatus(mode === 'texture'
+      ? '外观修改中：渲染正面 → AI 改图 → 贴图投影回模型（约 1~3 分钟）……'
+      : '几何重建中：渲染 → AI 改图 → Meshy 重建（约 2~5 分钟，约 20 积分）……');
+    await callApi('/api/run', {mode: 'model_edit', path: modelFile, instruction,
+                               edit_mode: mode, meshy_desensitize: desens});
+    previousOutput = ''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent = '模型修改中，详细进度见日志';
+    await checkService();
+  } catch (e) { modelStatus('模型修改失败：' + e.message); }
+}
+async function renderModelViews() {
+  try {
+    if (!modelFile) { await pickModelFile(); if (!modelFile) return; }
+    modelStatus('正在渲染 8 个方位（结果在「多视图」卡片）……');
+    await callApi('/api/run', {mode: 'mv3d_render', glb: modelFile, views: MV_VIEWS.map(v => v.key)});
+    previousOutput = ''; clearTerm(); setProg(5);
+    await checkService();
+  } catch (e) { modelStatus('渲染失败：' + e.message); }
+}
+async function modelToPrint() {
+  try {
+    if (!modelFile) { await pickModelFile(); if (!modelFile) return; }
+    modelStatus('正在转打印格式（STL/3MF 到 打印成品 目录）……');
+    await callApi('/api/run', {mode: 'print', path: modelFile,
+                               height: document.getElementById('height').value,
+                               base: document.getElementById('base').value,
+                               hollow: document.getElementById('hollow').value});
+    previousOutput = ''; clearTerm(); setProg(5);
+    await checkService();
+  } catch (e) { modelStatus('转打印失败：' + e.message); }
+}
+
+/* ================= 多视图测试图 ================= */
+const MV_VIEWS = [
+  {key:'front', name:'前', angle:'0°'},
+  {key:'back', name:'后', angle:'180°'},
+  {key:'left', name:'左', angle:'90°'},
+  {key:'right', name:'右', angle:'-90°'},
+  {key:'front_left', name:'左前45°', angle:'45°'},
+  {key:'front_right', name:'右前45°', angle:'-45°'},
+  {key:'back_left', name:'左后45°', angle:'135°'},
+  {key:'back_right', name:'右后45°', angle:'-135°'}
+];
+let mvMain = '';
+let mvResults = {};
+let mvSel = new Set();
+let mvExtras = {};
+let mvBusyView = '';
+let mvLastOutLen = -1;
+let mvClay = {};          // 旧灰模路径（保留兼容）
+let mvClayBusy = false;
+let mvGlb = '';           // 当前 3D 粗模路径
+function mvMode() { return document.getElementById('mv-mode') ? document.getElementById('mv-mode').value : 'qwen'; }
+function onMvModeChange() { mvRender(); }
+
+
+function mvViewLabel(key) { const v = MV_VIEWS.find(x => x.key === key); return v ? v.name : key; }
+function mvStatus(text) { const el = document.getElementById('mv-status'); if (el) el.textContent = text; }
+function mvUpdateSel() { const el = document.getElementById('mv-sel-count'); if (el) el.textContent = mvSel.size; }
+
+function mvLoadThumb(view, img, empty) {
+  const rec = mvResults[view];
+  if (!rec) return;
+  if (rec.thumb) { img.src = rec.thumb; img.style.display = 'block'; empty.style.display = 'none'; return; }
+  callApi('/api/edit_preview', {path: rec.path}).then(r => {
+    rec.thumb = r.image; img.src = r.image; img.style.display = 'block'; empty.style.display = 'none';
+  }).catch(() => {});
+}
+
+function mvRender() {
+  const grid = document.getElementById('mv-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (const v of MV_VIEWS) {
+    const rec = mvResults[v.key];
+    const slot = document.createElement('div');
+    slot.className = 'mv-slot' + (mvSel.has(v.key) ? ' sel' : '');
+    const head = document.createElement('div'); head.className = 'mv-head';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = mvSel.has(v.key);
+    cb.onchange = () => { if (cb.checked) mvSel.add(v.key); else mvSel.delete(v.key); mvRender(); };
+    const name = document.createElement('span'); name.className = 'mv-name'; name.textContent = v.name;
+    const angle = document.createElement('span'); angle.className = 'mv-angle'; angle.textContent = v.angle;
+    head.append(cb, name, angle);
+
+    const thumb = document.createElement('div'); thumb.className = 'mv-thumb'; thumb.title = '点击查看大图';
+    const img = document.createElement('img');
+    const empty = document.createElement('span'); empty.className = 'mv-empty';
+    const colored = mvResults[v.key];
+    empty.textContent = '未渲染';
+    thumb.append(img, empty);
+    if (mvBusyView === v.key || (mvMode() === 'mv3d' && mvClayBusy)) thumb.classList.add('busy');
+    const shownPath = colored ? colored.path : '';
+    thumb.onclick = () => { if (shownPath) showPreview(shownPath); };
+    if (colored) { mvLoadThumb(v.key, img, empty); }
+
+    const extra = document.createElement('input'); extra.className = 'mv-extra';
+    extra.placeholder = '这张的单独要求(可选)'; extra.value = mvExtras[v.key] || '';
+    extra.oninput = () => { mvExtras[v.key] = extra.value; };
+
+    const row = document.createElement('div'); row.className = 'btn-row';
+    const gen = document.createElement('button'); gen.className = 'btn btn-ghost btn-sm';
+    if (mvMode() === 'mv3d') {
+      if (mvGlb) {
+        gen.textContent = colored ? '🔁 重渲染' : '📸 渲染';
+        gen.onclick = () => mvRenderViews([v.key]);
+      } else {
+        gen.textContent = '🧊 待建粗模';
+        gen.onclick = () => mvStatus('请先点上方「🧊 ① 生成 3D 粗模」，再逐张渲染。');
+      }
+    } else {
+      gen.textContent = rec ? '🔁 重生成' : '▶️ 生成';
+      gen.onclick = () => mvGenerate([v.key]);
+    }
+    const look = document.createElement('button'); look.className = 'btn btn-ghost btn-sm'; look.textContent = '👁 查看';
+    look.onclick = () => { const p = colored ? colored.path : ''; if (p) showPreview(p); else mvStatus('这张还没有生成'); };
+    row.append(gen, look);
+    slot.append(head, thumb, extra, row);
+    grid.appendChild(slot);
+  }
+  mvUpdateSel();
+}
+
+async function mvPickMain() {
+  try {
+    const c = await callApi('/api/pick', {kind:'image'});
+    if (!c.path) return;
+    mvMain = c.path;
+    document.getElementById('mv-main-label').textContent = mvMain;
+    mvStatus('主图已选择，可以点每张图的「▶️ 生成」。');
+  } catch(e) { mvStatus('选择失败：' + e.message); }
+}
+function mvSelectAll() { mvSel = new Set(MV_VIEWS.map(v => v.key)); mvRender(); }
+function mvClearSel() { mvSel = new Set(); mvRender(); }
+
+function mvExistingRefs(exclude) {
+  const prefer = ['front','back','left','right','front_left','front_right','back_left','back_right'];
+  return prefer.filter(k => mvResults[k] && !exclude.includes(k)).slice(0, 2).map(k => mvResults[k].path);
+}
+
+async function mvGenerate(views) {
+  try {
+    if (!mvMain) { await mvPickMain(); if (!mvMain) return; }
+    if (!views || !views.length) { mvStatus('请先勾选要生成的方位'); return; }
+    // 按固定顺序生成：正面 -> 左右 -> 背面 -> 斜侧（正面当锚点，后续视图可拿它当参考）
+    views = [...views].sort((a, b) => MV_VIEWS.findIndex(v => v.key === a) - MV_VIEWS.findIndex(v => v.key === b));
+    const prompt = document.getElementById('mv-prompt').value.trim();
+    const extra = views.length === 1 ? ((mvExtras[views[0]] || '').trim()) : '';
+    const useRefs = document.getElementById('mv-use-refs').checked;
+    const refs = useRefs ? mvExistingRefs(views) : [];
+    mvBusyView = views.length === 1 ? views[0] : '';
+    mvLastOutLen = -1;
+    mvStatus(`正在生成 ${views.length} 张（${views.map(mvViewLabel).join('、')}）……单张约 1~3 分钟`);
+    mvRender();
+    await callApi('/api/run', {mode:'multiview', path:mvMain, views, prompt, extra, refs});
+    previousOutput = ''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent = '多视图生成中，详细进度见日志';
+    mvRender();
+    await checkService();
+  } catch(e) { mvStatus('生成失败：' + e.message); mvBusyView = ''; mvRender(); }
+}
+function mvGenerateSelected() { mvGenerate([...mvSel]); }
+
+async function mvBuildModel() {
+  try {
+    if (!mvMain) { await mvPickMain(); if (!mvMain) return; }
+    const engine = document.getElementById('mv-build-engine').value;
+    mvClayBusy = true; mvLastOutLen = -1;
+    mvStatus(engine === 'meshy'
+      ? '正在 Meshy 生成带贴图 3D（约 30 积分，1~2 分钟）……'
+      : '正在用原图建 3D 粗模（约 30~60 秒）……');
+    mvRender();
+    await callApi('/api/run', {
+      mode:'mv3d_build', path:mvMain,
+      views: MV_VIEWS.map(v => v.key),
+      build_engine: engine,
+      meshy_desensitize: false,
+      octree: document.getElementById('octree-res').value
+    });
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent = '3D 粗模生成中，详细进度见日志';
+    await checkService();
+  } catch(e) { mvStatus('建粗模失败：' + e.message); mvClayBusy = false; mvRender(); }
+}
+
+async function mvRenderViews(views) {
+  try {
+    if (!mvGlb) { mvStatus('请先点「🧊 ① 生成 3D 粗模」。'); return; }
+    if (!views || !views.length) { mvStatus('请先勾选要渲染的方位'); return; }
+    mvBusyView = views.length === 1 ? views[0] : '';
+    mvLastOutLen = -1;
+    mvStatus(`正在渲染 ${views.length} 张（同一个 3D 模型，姿势不变）……每张几秒`);
+    mvRender();
+    await callApi('/api/run', {mode:'mv3d_render', glb: mvGlb, views});
+    previousOutput=''; clearTerm(); setProg(5);
+    document.getElementById('job-status').textContent = '多视图渲染中，详细进度见日志';
+    await checkService();
+  } catch(e) { mvStatus('渲染失败：' + e.message); mvBusyView = ''; mvRender(); }
+}
+function mvRunSelected() { if (mvMode() === 'mv3d') mvRenderViews([...mvSel]); else mvGenerateSelected(); }
+
+/* ================= 最近输出画廊 ================= */
+let lastRecentLoad = 0;
+async function loadRecentOutputs(force) {
+  if (!hasBackend) return;
+  if (!force && Date.now() - lastRecentLoad < 15000) return;
+  lastRecentLoad = Date.now();
+  try {
+    const res = await callApi('/api/outputs');
+    const grid = document.getElementById('recent-grid');
+    const files = (res.files || []).slice(0, 12);
+    grid.innerHTML = '';
+    for (const f of files) {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb'; wrap.title = f.path;
+      const img = document.createElement('img');
+      callApi('/api/edit_preview', {path: f.path}).then(r => { img.src = r.image; }).catch(() => {});
+      const cap = document.createElement('span');
+      cap.textContent = f.name;
+      wrap.append(img, cap);
+      wrap.onclick = () => showPreview(f.path);
+      grid.appendChild(wrap);
+    }
+    document.getElementById('recent-empty').style.display = files.length ? 'none' : 'block';
+  } catch (e) { /* 忽略：老版本控制服务没有该接口 */ }
+}
+function showPreview(path) {
+  const modal = document.getElementById('preview-modal');
+  const img = document.getElementById('preview-modal-img');
+  callApi('/api/edit_preview', {path}).then(r => { img.src = r.image; modal.style.display = 'flex'; }).catch(() => {});
+}
+function closePreview() {
+  const modal = document.getElementById('preview-modal');
+  modal.style.display = 'none';
+  document.getElementById('preview-modal-img').removeAttribute('src');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+/* ================= 3D 引擎切换 / Meshy 余额 ================= */
+function onEngineChange() {
+  const engine = document.getElementById('engine3d').value;
+  const meshy = engine !== 'hunyuan';
+  document.getElementById('meshy-geometry-wrap').style.display = meshy ? 'block' : 'none';
+  const geo = document.getElementById('meshy-geometry');
+  for (const opt of geo.options) {
+    opt.disabled = (engine === 'meshy-mv' && opt.value === '4k');
+  }
+  if (engine === 'meshy-mv' && geo.value === '4k') geo.value = '2k';
+  const box = document.getElementById('meshy-desens');
+  const supportsDesens = engine === 'meshy';
+  box.disabled = !supportsDesens;
+  if (!supportsDesens) box.checked = false;
+  const hint = document.getElementById('engine-hint');
+  if (hint) hint.textContent = engine === 'meshy-mv'
+    ? '☁️ Meshy 多视图：首次约 28 积分（3视图+2K），复用已有视图约 25 积分；侧/背细节最稳。'
+    : engine === 'meshy'
+    ? '☁️ Meshy 云：约 20 积分/次（Ultra +5）。勾选上面「敏感内容模式」会先脱敏过审、生成后本地还原敏感贴图。'
+    : engine === 'auto'
+      ? '自动：先跑本地 Hunyuan3D（免费），失败/异常才自动调 Meshy（不浪费积分）。'
+      : '本地 Hunyuan3D：免费、离线；建议 3D 精度选「极致(512)」，但仍受单视角信息限制。';
+}
+async function loadMeshyBalance() {
+  const el = document.getElementById('meshy-balance');
+  if (!el) return;
+  el.textContent = '查询中…';
+  try {
+    const res = await callApi('/api/meshy_balance');
+    el.textContent = res.ok ? res.balance : '连接失败';
+    if (!res.ok) el.title = res.error || '';
+  } catch (e) { el.textContent = '连接失败'; el.title = e.message; }
 }
 
 // 页面加载时自动检测
 checkService();
 checkOllama();
-
-// 每 30 秒自动检测一次服务状态
-setInterval(() => { checkService(); }, 2000);
+loadRecentOutputs(true);
+loadMeshyBalance();
+loadMeshyKeyInfo();
+mvRender();
+setInterval(() => { checkService(); }, 3000);
+/* 页面心跳：关闭工具 10 分钟后自动停止 ComfyUI 并释放显存 */
+callApi('/api/heartbeat').catch(()=>{});
+setInterval(() => { callApi('/api/heartbeat').catch(()=>{}); }, 15000);
 </script>
+<script src="completion.js"></script>
 </body>
 </html>

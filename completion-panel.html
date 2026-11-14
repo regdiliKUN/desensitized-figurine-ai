@@ -1,0 +1,84 @@
+<style>
+#completion-inline{margin-top:10px;min-width:0;font-size:12px}
+#edit-completion{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);scroll-margin-top:80px}
+#edit-completion>summary{cursor:pointer;color:var(--text);font-weight:600;font-size:12px;padding:6px 0}
+#completion-inline .ce-group{border:1px solid var(--border);border-radius:7px;padding:9px;margin-bottom:8px;min-width:0}
+#completion-inline h2{font-size:12px;color:var(--text);margin:0 0 6px}
+#completion-inline p{font-size:11px;margin:4px 0 6px}
+#completion-inline label{display:block;margin:5px 0 2px}
+#completion-inline input:not([type=checkbox]):not([type=range]),#completion-inline select,#completion-inline textarea{width:100%;min-width:0;background:#0a0b0f;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 7px;font:inherit}
+#completion-inline button{background:transparent;color:var(--dim);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font:inherit;font-size:11px;cursor:pointer}
+#completion-inline button:hover{border-color:var(--accent);color:var(--text)}
+#completion-inline button:disabled{opacity:.45;cursor:default}
+#completion-inline .primary{background:var(--accent);color:white}
+#completion-inline .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+#completion-inline .row{display:flex;gap:5px;flex-wrap:wrap}
+#completion-inline .row>*{flex:1;min-width:0}
+#completion-inline .path{font-size:10px;overflow-wrap:anywhere}
+#completion-inline .hint{font-size:10.5px;color:var(--dim)}
+#completion-inline .toolbar{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+#completion-inline .toolbar label{display:flex;gap:3px;align-items:center;margin:0}
+#completion-inline .toolbar select{width:auto}
+#completion-inline .tool.active{background:rgba(124,92,252,.2);color:var(--text);border-color:var(--accent)}
+#completion-inline .stage{overflow:auto;max-height:65vh;min-height:160px;background:repeating-conic-gradient(#212532 0% 25%,#171c27 0% 50%) 50%/16px 16px;border:1px solid var(--border);border-radius:7px;touch-action:none}
+#completion-inline canvas{display:block;max-width:none;touch-action:none;cursor:crosshair}
+#completion-inline .panel{padding:8px 0;border-top:1px solid var(--border);min-width:0}
+#ce-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:8px}
+#ce-results img{width:100%;cursor:zoom-in;border-radius:6px}
+#ce-results .result{min-width:0;padding:6px;border:1px solid var(--border);border-radius:6px}
+#ce-results .result p{overflow-wrap:anywhere;font-size:10px}
+#ce-log{white-space:pre-wrap;overflow:auto;max-height:160px;font:10px/1.5 Consolas,monospace}
+#ce-status{white-space:pre-wrap;color:var(--text);margin-top:6px}
+#ce-cursor{font-size:10px;color:var(--dim)}
+#ce-preview-dialog{margin:auto;max-width:95vw;max-height:95vh;background:var(--card);color:var(--text);border:1px solid var(--border);padding:8px;border-radius:8px}
+#ce-preview-dialog img{max-width:90vw;max-height:85vh}
+#completion-inline details>summary{cursor:pointer;color:var(--dim);font-size:11px;padding:5px 0}
+
+#completion-inline .ce-editor{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px;align-items:start}
+#completion-inline .ce-picture{min-width:0}
+#completion-inline .stage{padding:24px;min-height:220px;background:#10131c;max-height:72vh;overscroll-behavior:contain}
+#ce-frame{position:relative;width:max-content;max-width:none;background:repeating-conic-gradient(#39404e 0% 25%,#252b36 0% 50%) 50%/16px 16px;border:1px solid #a995ff;box-sizing:content-box}
+#completion-inline .ce-resize{position:absolute;z-index:3;touch-action:none;border:0;background:transparent;padding:0;min-width:0}
+#completion-inline .ce-resize::after{content:'';position:absolute;width:7px;height:7px;border:1px solid #e7dfff;background:#7c5cfc;left:50%;top:50%;transform:translate(-50%,-50%)}
+#completion-inline .ce-resize[data-edge=n]{left:8px;right:8px;height:10px;top:-5px;cursor:ns-resize}
+#completion-inline .ce-resize[data-edge=s]{left:8px;right:8px;height:10px;bottom:-5px;cursor:ns-resize}
+#completion-inline .ce-resize[data-edge=w]{top:8px;bottom:8px;width:10px;left:-5px;cursor:ew-resize}
+#completion-inline .ce-resize[data-edge=e]{top:8px;bottom:8px;width:10px;right:-5px;cursor:ew-resize}
+#completion-inline .ce-resize[data-edge=nw],#completion-inline .ce-resize[data-edge=ne],#completion-inline .ce-resize[data-edge=sw],#completion-inline .ce-resize[data-edge=se]{width:14px;height:14px}
+#completion-inline .ce-resize[data-edge=nw]{top:-7px;left:-7px;cursor:nwse-resize}
+#completion-inline .ce-resize[data-edge=ne]{top:-7px;right:-7px;cursor:nesw-resize}
+#completion-inline .ce-resize[data-edge=sw]{bottom:-7px;left:-7px;cursor:nesw-resize}
+#completion-inline .ce-resize[data-edge=se]{bottom:-7px;right:-7px;cursor:nwse-resize}
+#ce-joint-sidebar{border:1px solid var(--border);border-radius:7px;padding:5px;max-height:72vh;overflow:auto;min-width:0}
+#ce-joint-list{display:flex;flex-direction:column;gap:3px}
+#completion-inline .ce-joint-row{display:grid;grid-template-columns:minmax(0,1fr) 22px;gap:2px;align-items:center}
+#completion-inline .ce-joint-select{display:flex;align-items:center;gap:4px;white-space:nowrap;padding:5px 3px;text-align:left}
+#completion-inline .ce-joint-select.active{border-color:var(--accent);background:rgba(124,92,252,.18);color:var(--text)}
+#completion-inline .ce-joint-dot{width:11px;height:11px;border:2px solid var(--joint-color);border-radius:50%;flex:none}
+#completion-inline .ce-joint-select.placed .ce-joint-dot{background:var(--joint-color);box-shadow:inset 0 0 0 2px var(--card)}
+#completion-inline .ce-joint-remove{padding:4px 0;font-size:13px}
+#ce-joint-sidebar h2{font-size:11px;margin-bottom:5px}
+#completion-inline .ce-picture .toolbar{gap:3px}
+#completion-inline .ce-picture .toolbar button{padding:4px 5px}
+</style>
+<section class="ce-group"><h2>1 · 原图与工程</h2><div class="row"><button id="ce-pick">另选图片</button><button id="ce-load">载入工程</button></div><input type="file" id="ce-project-file" accept=".json,application/json" hidden>
+<p id="ce-source-label" class="path">沿用上方选图，或在这里载入图片</p><label for="ce-source-path">本地图片路径</label><input id="ce-source-path" placeholder="也可粘贴完整路径"><button id="ce-load-path" style="margin-top:6px">载入路径</button>
+<div class="row" style="margin-top:10px"><button id="ce-export">导出工程 JSON</button><button id="ce-save">保存工程和引导图</button></div><p id="ce-save-path" class="path"></p></section><section class="ce-group"><h2>2 · 拖动边框扩展画布</h2>
+<p class="hint">拖动图片外框的四边或四角，向外拉出透明区域；向内拉可撤回扩展部分。原图不缩放、不裁切。点击“补全画面”自动填充透明区域。</p>
+<div class="row"><button id="ce-export-canvas">导出透明画布 PNG</button></div>
+<details><summary>精确边距与接缝设置</summary><div class="two"><label>左<input id="ce-pad-left" type="number" min="0" max="4096" value="0"></label><label>右<input id="ce-pad-right" type="number" min="0" max="4096" value="0"></label><label>上<input id="ce-pad-top" type="number" min="0" max="4096" value="0"></label><label>下<input id="ce-pad-bottom" type="number" min="0" max="4096" value="0"></label></div>
+<button id="ce-apply-padding" style="margin-top:8px">应用精确边距</button><div class="two"><label>接缝向内过渡<input id="ce-overlap" type="number" min="0" max="256" value="0"></label><label>选区羽化<input id="ce-feather" type="number" min="0" max="32" value="4"></label></div><p class="hint">默认只补透明区；需要接缝融合时可增加向内过渡。</p></details></section>
+<div class="ce-editor"><div class="ce-picture">
+<section class="panel"><div class="toolbar" role="toolbar"><button class="tool active" data-tool="joint">关节打点</button><button class="tool" data-tool="mask">涂修改区</button><button class="tool" data-tool="erase">擦除修改区</button><button class="tool" data-tool="hair">发束/轮廓线</button><button class="tool" data-tool="hair-erase">删除引导线</button><button id="ce-undo">撤销</button><button id="ce-redo">重做</button></div>
+<div class="toolbar"><label>笔宽 <input id="ce-brush" type="range" min="2" max="180" value="30"><span id="ce-brush-value">30</span></label><label>显示 <input id="ce-show-mask" type="checkbox" checked>修改区</label><label><input id="ce-show-pose" type="checkbox" checked>骨架</label><label><input id="ce-show-hair" type="checkbox" checked>引导线</label><label>缩放 <select id="ce-zoom"><option value="fit">适应窗口</option><option value="0.25">25%</option><option value="0.5">50%</option><option value="1">100%</option><option value="2">200%</option></select></label><button id="ce-clear-layer">清空当前标注层</button></div>
+<p id="ce-mask-legend">棋盘格：透明区域；拖外框扩图。点击定位点可取消，再点其他位置重放；右侧 × 也可取消。紫线为发束引导。</p><p id="ce-dimensions" class="hint"></p><div class="stage" id="ce-stage"><div id="ce-frame"><canvas id="ce-canvas" width="800" height="500" aria-label="扩图与姿态标注画布"></canvas><button type="button" class="ce-resize" data-edge="n" aria-label="拖动上边扩展画布"></button><button type="button" class="ce-resize" data-edge="s" aria-label="拖动下边扩展画布"></button><button type="button" class="ce-resize" data-edge="w" aria-label="拖动左边扩展画布"></button><button type="button" class="ce-resize" data-edge="e" aria-label="拖动右边扩展画布"></button><button type="button" class="ce-resize" data-edge="nw" aria-label="拖动左上角扩展画布"></button><button type="button" class="ce-resize" data-edge="ne" aria-label="拖动右上角扩展画布"></button><button type="button" class="ce-resize" data-edge="sw" aria-label="拖动左下角扩展画布"></button><button type="button" class="ce-resize" data-edge="se" aria-label="拖动右下角扩展画布"></button></div></div><span id="ce-cursor">原图坐标：—</span></section>
+</div><aside id="ce-joint-sidebar"><h2>人体定位点</h2><p class="hint">先选圆圈/名称，再到左图点击。实心表示已定位，× 可取消。</p>
+<div id="ce-joint-list"></div><select id="ce-joint" hidden></select>
+<button id="ce-delete-joint" hidden>取消当前点</button><button id="ce-lock-joint" hidden>锁定</button>
+<button id="ce-template" style="margin-top:6px">站姿模板</button><p id="ce-joint-info" class="hint"></p></aside></div>
+<section class="ce-group"><h2>3 · 生成设置</h2><label for="ce-engine">引擎</label><select id="ce-engine"><option value="qwen">Qwen · 原图与引导图参考</option><option value="sdxl">SDXL · OpenPose / 轮廓控制（实验）</option></select><p id="ce-capabilities" class="hint">正在检查模型……</p><p id="ce-engine-help" class="hint"></p>
+<p class="hint">使用上方的“修改要求”和“同时生成方案数”。</p>
+<details><summary>更多设置</summary><div class="two"><label>步数<input id="ce-steps" type="number" min="4" max="50" value="20"></label><label>采样百万像素<select id="ce-megapixels"><option value="0.5">0.5（较快）</option><option value="1" selected>1.0</option><option value="1.5">1.5</option></select></label><label>种子（-1 随机）<input id="ce-seed" type="number" min="-1" max="4294967295" value="-1"></label><label>骨架强度<input id="ce-pose-strength" type="number" min="0" max="1.5" step="0.05" value="0.8"></label><label>线稿强度<input id="ce-line-strength" type="number" min="0" max="1.5" step="0.05" value="0.55"></label></div><p class="hint">两项强度仅用于 SDXL；Qwen 按参考图理解标注，不能保证逐点精确服从。输出为原图扩展尺寸，细节受采样分辨率限制。</p></details>
+<button id="ce-generate" class="primary" style="width:100%;margin-top:14px">补全画面（填充透明区）</button><div id="ce-status" role="status">先选择一张非露骨插画。</div></section><section class="panel"><h2>生成结果</h2><p class="hint">点击图片放大。可将结果设为下一轮原图继续修改；既有工程不被覆盖。</p><div id="ce-results"></div></section>
+<section class="panel"><h2>运行日志</h2><pre id="ce-log">等待任务。</pre></section>
+<dialog id="ce-preview-dialog"><button id="ce-close-dialog">关闭</button><br><img id="ce-dialog-image" alt="补全结果大图"></dialog>
