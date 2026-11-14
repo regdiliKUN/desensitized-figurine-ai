@@ -22,13 +22,16 @@ from pathlib import Path
 # ═══════════════════════════════════════════════════════════
 #  配置
 # ═══════════════════════════════════════════════════════════
-COMFYUI_DIR = r"E:\AI\ComfyUI"
+# 打包成 exe 后以 exe 所在目录为项目根，源码运行时以脚本所在目录为根；
+# 整个文件夹搬到别的盘也能用。
+_ROOT = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, "frozen", False) else __file__))
+COMFYUI_DIR = os.path.join(_ROOT, "ComfyUI")
 COMFYUI_PYTHON = os.path.join(COMFYUI_DIR, "venv", "Scripts", "python.exe")
 COMFYUI_MAIN = os.path.join(COMFYUI_DIR, "main.py")
 COMFYUI_PORT = 8188
 COMFYUI_URL = f"http://127.0.0.1:{COMFYUI_PORT}/system_stats"
 
-LAUNCHER_HTML = r"E:\AI\启动器.html"
+LAUNCHER_HTML = os.path.join(_ROOT, "启动器.html")
 
 MAX_WAIT = 120  # 最多等待秒数
 POLL_INTERVAL = 3  # 轮询间隔
