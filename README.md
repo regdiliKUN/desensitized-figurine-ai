@@ -171,8 +171,9 @@ ollama pull qwen3:27b
 
 ## 八、License
 
-本项目源码（fig.py、convert_3d.py、launcher_exe.py 等）供个人学习使用。
-ComfyUI / Hunyuan3D / Ollama / Pony Diffusion 各自遵守其原始 License。
+本仓库的原创代码与文档采用 [MIT 许可证](LICENSE)。
+
+ComfyUI、Hunyuan3D、Ollama、Pony Diffusion 及其他第三方软件和模型权重仍适用各自的原始许可证。
 
 ---
 
