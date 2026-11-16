@@ -1,5 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
+set "ROOT=%~dp0"
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 title 二次元手办 AI 流水线
 
 echo ================================================================
@@ -15,10 +17,10 @@ if %errorlevel%==0 (
 )
 
 REM ★ 后台启动 ComfyUI
-echo [*] 启动 ComfyUI 服务（E:\AI\ComfyUI）...
+echo [*] 启动 ComfyUI 服务（%ROOT%\ComfyUI）...
 echo [*] 端口: 8188  首次加载模型约需 30-60 秒
 echo.
-start "ComfyUI-Server" /MIN cmd /c "cd /d E:\AI\ComfyUI && venv\Scripts\python.exe main.py --port 8188"
+start "ComfyUI-Server" /MIN cmd /c "cd /d "%ROOT%\ComfyUI" && venv\Scripts\python.exe main.py --port 8188"
 
 REM ★ 等待服务就绪（最多等 90 秒）
 echo [*] 等待服务就绪...
@@ -39,14 +41,14 @@ echo [✓] ComfyUI 服务已就绪！
 :open_launcher
 REM ★ 打开可视化启动器
 echo [*] 打开操作界面...
-start "" "E:\AI\ComfyUI\venv\Scripts\pythonw.exe" "E:\AI\control_server.py"
+start "" "%ROOT%\ComfyUI\venv\Scripts\pythonw.exe" "%ROOT%\control_server.py"
 
 echo.
 echo ================================================================
 echo   启动完成！
 echo   · 操作界面已在浏览器中打开
 echo   · ComfyUI 在后台运行（端口 8188）
-echo   · 关闭此窗口不会影响服务
+echo   · 关闭浏览器后 10 分钟无心跳，自动停止 ComfyUI 并释放显存
 echo ================================================================
 echo.
 echo 按任意键关闭此窗口...
@@ -57,7 +59,7 @@ exit /b 0
 echo.
 echo [!] ComfyUI 启动超时（90秒）
 echo     可能原因：首次加载模型较慢 / GPU 被占用
-echo     请稍后在浏览器打开 E:\AI\启动器.html
+echo     请稍后在浏览器打开 %ROOT%\启动器.html
 echo.
 echo 按任意键关闭...
 pause >nul 2>&1
